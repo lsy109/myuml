@@ -15,6 +15,7 @@ class MainArea extends React.Component {
         this.state = {
             AceElement: null,
             canvasItem: [],
+            massagefromSidebar: '',
         }
 
 
@@ -32,11 +33,30 @@ class MainArea extends React.Component {
 
 
 
+
     }
 
     getCanvasItem = (item) => {
         this.setState({ canvasItem: item });
         console.log(item)
+    }
+
+    getDataFromSidebar = () => {
+
+    }
+    handleDragStart = (data) => {
+        // 正确做法：使用函数形式的setState
+        // 正确做法：使用函数形式的setState
+        // 正确做法：在setState的回调函数中处理
+        this.setState({ massagefromSidebar: data }, () => {
+            console.log(this.state.massagefromSidebar); // 此时可以获取更新后的值
+        });
+
+
+    
+    }
+    test = () => {
+        console.log(this.state.massagefromSidebar)
     }
 
 
@@ -63,7 +83,8 @@ class MainArea extends React.Component {
 
                 </div>
                 <div className="sideBar">
-                    <Sidebar />
+                    <Sidebar
+                        sendDataToParent={this.handleDragStart} />
 
                 </div>
 

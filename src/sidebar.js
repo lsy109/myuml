@@ -24,7 +24,8 @@ class Sidebar extends React.Component {
     handleDragStart = (event) => {
         const draggedDiv = event.target;
         console.log("拖动的是：", draggedDiv.textContent);
-        send(draggedDiv.textContent)
+        this.props.sendDataToParent(draggedDiv.textContent);
+        // send(draggedDiv.textContent)
 
 
 
