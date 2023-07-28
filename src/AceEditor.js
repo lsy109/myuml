@@ -1,7 +1,7 @@
 
 import AceEditor from 'react-ace';
 import React from "react";
-
+//hello bitch git test
 import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/mode-javascript';
 class Editor extends React.Component {
