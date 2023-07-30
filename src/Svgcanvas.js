@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { shape1 } from "./shapes";
 import parser from './parser'; // 导入 parser 文件
 import MainArea from './mainArea';
+import Sidebar from './sidebar';
 class SvgCanvas extends Component {
   constructor(props) {
     super(props);
@@ -21,7 +22,8 @@ class SvgCanvas extends Component {
       select: false,
       AceElement: null,
       DomID: 0,
-      dongzuo: "",
+      text: "text",
+
 
     };
     this.canvasRef = React.createRef();
@@ -38,12 +40,9 @@ class SvgCanvas extends Component {
 
   componentDidMount() {
     // const AceElement = this.props;
-    const dongzuo1 = this.props.value;
-    this.state.dongzuo = dongzuo1;
+
     // this.state.AceElement = AceElement.AceElement.AceElement;
-    this.setState({ dongzuo: dongzuo1 })
-    console.log(this.state.dongzuo)
-    this.gengx(this.props.value)
+
     // this.state.dongzuo = this.props.value;//获取sidebar拖拽图形的类型
     this.drawCanvas();
 
@@ -54,12 +53,7 @@ class SvgCanvas extends Component {
 
 
   }
-  gengx = (value) => {
 
-    this.setState({ dongzuo: value })
-    this.state.dongzuo = value
-    console.log(this.state.dongzuo)
-  }
   mouseUp = () => {
     const canvas = this.state.canvas;
     this.state.canvas.removeEventListener("mousemove", this.moveImg);
@@ -107,22 +101,24 @@ class SvgCanvas extends Component {
 
     for (var i = 0; i < item.length; i++) {
       const shape = item[i]
-      shape.forEach((element) => {
-        element.forEach((e) => {
-          if (e.type == "shape") {
-            context.beginPath();
-            context.fillStyle = "red";
-            context.fillRect(e.x, e.y, e.width, e.height)
-            context.stroke();
-            context.lineWidth = lineWidth;
-          } else if (e.type == "line") {
-            context.beginPath();
-            context.moveTo(e.movex, e.movey);
-            context.lineTo(e.linex, e.liney);
-            context.stroke();
-            context.lineWidth = lineWidth;
-          }
-        })
+      shape.forEach((e) => {
+        if (e.type == "shape") {
+          context.beginPath();
+          context.fillStyle = e.color;
+          context.fillRect(e.x, e.y, e.width, e.height);
+          context.font = e.fontsize;
+          context.fillStyle = e.textcolor;
+          context.fillText(e.text, e.textX, e.textY);
+          context.stroke();
+          context.lineWidth = lineWidth;
+        } else if (e.type == "line") {
+          context.beginPath();
+          context.moveTo(e.movex, e.movey);
+          context.lineTo(e.linex, e.liney);
+          context.stroke();
+          context.lineWidth = lineWidth;
+        }
+
 
       })
 
@@ -142,7 +138,7 @@ class SvgCanvas extends Component {
     const rect = canvas.getBoundingClientRect();
     const x = event.offsetX - rect.left + 350;
     const y = event.offsetY - rect.top;
-    console.log(this.props.value)
+
 
     this.drawSquare(x, y);
   };
@@ -152,12 +148,13 @@ class SvgCanvas extends Component {
 
 
     // shape1(x, y, context);
-    console.log(this.state.dongzuo);
 
-    const shape = shape1(x, y, context, this.state.dongzuo);
+
+    const shape = shape1(x, y, context, this.props.massageSidebar, this.state.text);
 
     this.state.canvasItem.push(shape)
-    // this.props.onCallback(this.state.canvasItem)
+    this.props.onCallback(this.state.canvasItem)
+
     parser.toEditor(this.state.canvasItem);
 
 
@@ -172,7 +169,7 @@ class SvgCanvas extends Component {
     const canvas = this.canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     // console.log(rect)
-    console.log(this.state.AceElement)
+
     const mouseX = e.clientX - rect.left - 39;
     const mouseY = e.clientY - rect.top;
 
@@ -180,33 +177,31 @@ class SvgCanvas extends Component {
     const index = 0;
 
     if (item.length != 0) {
+
       for (var i = 0; i < item.length; i++) {
         const shape = item[i];
-        shape.forEach((element) => {
-          element.forEach((event) => {
-            console.log(event);
-            console.log(mouseX)
-            if (mouseX >= event.x && mouseX <= event.x + event.width && mouseY >= event.y && mouseY <= event.y + event.height) {
-              // const index = shape.findIndex(item => item.x === event.x && item.y === event.y);
-              // console.log(event);
+        shape.forEach((event) => {
+          if (mouseX >= event.x && mouseX <= event.x + event.width && mouseY >= event.y && mouseY <= event.y + event.height) {
+            // const index = shape.findIndex(item => item.x === event.x && item.y === event.y);
+            // console.log(event);
 
-              this.state.moveImg.push(event);
-              this.setState({ imgselect: true });
+            this.state.moveImg.push(event);
+            this.setState({ imgselect: true });
 
-              this.state.canvas.addEventListener("mousemove", this.moveImg);
+            this.state.canvas.addEventListener("mousemove", this.moveImg);
 
-            } else {
+          } else {
 
-              this.state.startX = e.clientX - rect.left;
-              this.state.startY = e.clientY - rect.top;
-              this.setState({ select: true });
-              canvas.addEventListener("mousemove", this.mouseSelect);
+            this.state.startX = e.clientX - rect.left;
+            this.state.startY = e.clientY - rect.top;
+            this.setState({ select: true });
+            canvas.addEventListener("mousemove", this.mouseSelect);
 
-            }
+          }
 
 
 
-          })
+
 
         })
 
@@ -240,25 +235,19 @@ class SvgCanvas extends Component {
 
 
       const canvasitem = this.state.canvasItem;
-
-      for (var i = 0; i < item.length; i++) {//选中的图形
-
-        for (var j = 0; j < canvasitem.length; j++) {//拆解整个画布的图形(第一层)
-          const items = canvasitem[j];
-          for (var x = 0; x < items.length; x++) {//确定点选的图（第二层）
-            item[x].x = movex;
-            item[x].y = movey;
-            ctx.clearRect(0, 0, this.state.canvasSize, this.state.canvasSize);
-            this.reDrawShape();
+      for (var i = 0; i < item.length; i++) {
+        item[i].x = movex;
+        item[i].y = movey;
+        item[i].textX = movex;
+        item[i].textY = movey + 25;
+        ctx.clearRect(0, 0, this.state.canvasSize, this.state.canvasSize);
+        this.reDrawShape();
 
 
-
-          }
-
-        }
 
 
       }
+
 
 
     }
@@ -287,7 +276,23 @@ class SvgCanvas extends Component {
 
     }
   }
+
+
+  //处理editor返回的dom节点
+  dataFromEditor = (value) => {
+    const item = value;
+    for (var i = 0; i < item.length; i++) {
+      const shape = shape1(200, 200, this.state.context, "graphics1", this.state.text);
+
+      this.state.canvasItem.push(shape)
+    }
+    console.log(value)
+  }
+
+
   render() {
+
+
     const { scale } = this.state;
     const svgSize = 700 * scale;
 

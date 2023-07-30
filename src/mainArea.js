@@ -12,10 +12,13 @@ class MainArea extends React.Component {
         super(props);
         this.mainAreaRef = React.createRef();
         this.AceRef = React.createRef();
+        this.EditorRef = React.createRef();
+        this.SvgRef = React.createRef();
         this.state = {
             AceElement: null,
             canvasItem: [],
             massagefromSidebar: '',
+            dataFromEditor: null,
         }
 
 
@@ -36,28 +39,32 @@ class MainArea extends React.Component {
 
     }
 
-    getCanvasItem = (item) => {
+    getCanvasItem = (item) => {//将SvgCanvas的item传入Editor
         this.setState({ canvasItem: item });
-        console.log(item)
+        this.EditorRef.current.trunToText(item);
     }
 
     getDataFromSidebar = () => {
 
     }
-    handleDragStart = (data) => {
+    handleDragStart = (data) => {//取得sidebar拖拽的方块的值
         // 正确做法：使用函数形式的setState
         // 正确做法：使用函数形式的setState
         // 正确做法：在setState的回调函数中处理
-        this.setState({ massagefromSidebar: data }, () => {
-            console.log(this.state.massagefromSidebar); // 此时可以获取更新后的值
-        });
+        this.setState({ massagefromSidebar: data });
+
+    }
+    getEditorItem = (value) => {
+        this.setState({ dataFromEditor: value })
+        this.SvgRef.current.dataFromEditor(value);
+        console.log(value)
+
+    }
 
 
-    
-    }
-    test = () => {
-        console.log(this.state.massagefromSidebar)
-    }
+
+
+
 
 
 
@@ -65,6 +72,11 @@ class MainArea extends React.Component {
 
     render() {
         const AceElement = this.state;
+        const { massagefromSidebar } = this.state;
+        const { canvasItem } = this.state;
+        const { dataFromEditor } = this.state;
+
+
 
         return (
             <div className="mainArea">
@@ -74,12 +86,22 @@ class MainArea extends React.Component {
                     </label>
                 </nav>
                 <div ref={this.AceRef} className="aceEditor">
-                    <Editor />
+                    <Editor
+                        ref={this.EditorRef}
+                        item={canvasItem}
+                        sendDataToParent={this.getEditorItem}
+
+                    />
                 </div>
                 <div className="canvasPanel" ref={this.mainAreaRef}>
                     <SvgCanvas
+                        ref={this.SvgRef}
                         AceElement={AceElement}
-                        onCallback={this.getCanvasItem} />
+                        onCallback={this.getCanvasItem}
+                        massageSidebar={massagefromSidebar}
+                        dataFromEditor={dataFromEditor}
+
+                    />
 
                 </div>
                 <div className="sideBar">

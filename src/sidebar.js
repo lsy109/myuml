@@ -37,8 +37,8 @@ class Sidebar extends React.Component {
         return (
 
             <div className="container">
-                <div draggable="true" className="color1">圖形1</div>
-                <div draggable="true" className="color2">圖形2</div>
+                <div draggable="true" className="color1">graphics1</div>
+                <div draggable="true" className="color2">square</div>
 
             </div>
 
