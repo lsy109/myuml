@@ -20,8 +20,6 @@ class MainArea extends React.Component {
             massagefromSidebar: '',
             dataFromEditor: null,
             Domparser: [{ text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
-            { text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
-            { text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
 
             ],
         }
@@ -42,6 +40,7 @@ class MainArea extends React.Component {
 
 
 
+
     }
 
     getCanvasItem = (item) => {//将SvgCanvas的item传入Editor
@@ -51,6 +50,11 @@ class MainArea extends React.Component {
 
     getDataFromSidebar = () => {
 
+    }
+    text = () => {
+
+        console.log("fun")
+        this.EditorRef.current.text();
     }
     handleDragStart = (data) => {//取得sidebar拖拽的方块的值
         // 正确做法：使用函数形式的setState
@@ -91,15 +95,7 @@ class MainArea extends React.Component {
                     <label className="logo">myUml <label className="version">v20230717</label>
                     </label>
                 </nav>
-                <div ref={this.AceRef} className="aceEditor">
-                    <Editor
-                        ref={this.EditorRef}
-                        item={canvasItem}
-                        sendDataToParent={this.getEditorItem}
-                        startValue={Domparser}
 
-                    />
-                </div>
                 <div className="canvasPanel" ref={this.mainAreaRef}>
                     <SvgCanvas
                         ref={this.SvgRef}
@@ -119,7 +115,15 @@ class MainArea extends React.Component {
                 </div>
 
 
+                <div ref={this.AceRef} className="aceEditor">
+                    <Editor
+                        ref={this.EditorRef}
+                        item={canvasItem}
+                        sendDataToParent={this.getEditorItem}
+                        startValue={Domparser}
 
+                    />
+                </div>
 
 
 

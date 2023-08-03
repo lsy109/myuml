@@ -29,8 +29,7 @@ class Editor extends React.Component {
     componentDidMount() {
         // this.startText();
 
-        this.getDomText(this.props.startValue)
-
+        this.getDomText(this.props.startValue);
         // this.EditorTextChange(this.state.editorContent)
         // const num = this.getLineNumber('@enduml');
         // this.setState({ enduml: num })
@@ -64,12 +63,10 @@ class Editor extends React.Component {
 
         this.deleteContentAtLine(linenum - 1);
         for (var i = 0; i < item.length; i++) {
-            let dom = item[i];
             linenum += 1;
             this.insertStringAtLine(`${item[i].domtext1} ${item[i].line} ${item[i].domtext2}\n`, linenum)
 
         }
-        console.log(linenum)
         this.insertStringAtLine("@enduml", linenum + 2)
         // const canvasitem = item;
         // const { editorContent } = this.state;
@@ -95,7 +92,6 @@ class Editor extends React.Component {
         const document = session.getDocument();
         const index = this.state.editorContent.indexOf(searchString);
         const position = document.indexToPosition(index);
-        console.log(`Line number of '${searchString}': ${position.row + 1}`);
         return position.row + 1
     };
     //插入字串到自定位置
@@ -111,7 +107,6 @@ class Editor extends React.Component {
 
     };
     deleteContentAtLine = (lineNumber) => {
-        console.log(lineNumber)
         if (this.editorRef.current && this.editorRef.current.editor) {
             const editor = this.editorRef.current.editor;
             const session = editor.getSession();
@@ -148,13 +143,13 @@ class Editor extends React.Component {
         const text = /@startuml|@enduml/g;
         const dom = value.replace(text, "")
         const dom1 = dom.split("\n");
+        console.log(dom1);
         for (var i = 1; i < dom1.length - 1; i++) {
             const text = dom1[i].split("->");
             Svgdom.push(text);
 
         }
         this.props.sendDataToParent(Svgdom);
-
 
 
     }
@@ -169,7 +164,7 @@ class Editor extends React.Component {
                 ref={this.editorRef}
                 mode="javascript" // 设置编辑器的模式
                 theme="monokai" // 设置编辑器的主题
-                // onChange={this.EditorTextChange} // 处理编辑器内容变化的回调函数
+                onChange={this.EditorTextChange} // 处理编辑器内容变化的回调函数
                 name="code-editor"
                 editorProps={{ $blockScrolling: true }}
                 setOptions={{ useWorker: false }} // 配置选项（根据您的需求）
