@@ -19,6 +19,11 @@ class MainArea extends React.Component {
             canvasItem: [],
             massagefromSidebar: '',
             dataFromEditor: null,
+            Domparser: [{ text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
+            { text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
+            { text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
+
+            ],
         }
 
 
@@ -75,6 +80,7 @@ class MainArea extends React.Component {
         const { massagefromSidebar } = this.state;
         const { canvasItem } = this.state;
         const { dataFromEditor } = this.state;
+        const { Domparser } = this.state;
 
 
 
@@ -90,6 +96,7 @@ class MainArea extends React.Component {
                         ref={this.EditorRef}
                         item={canvasItem}
                         sendDataToParent={this.getEditorItem}
+                        startValue={Domparser}
 
                     />
                 </div>
@@ -100,6 +107,7 @@ class MainArea extends React.Component {
                         onCallback={this.getCanvasItem}
                         massageSidebar={massagefromSidebar}
                         dataFromEditor={dataFromEditor}
+                        startValue={Domparser}
 
                     />
 

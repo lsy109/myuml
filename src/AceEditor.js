@@ -9,11 +9,9 @@ class Editor extends React.Component {
         super(props);
         this.state = {
             editorContent: `@startuml
-Bob -> Alice
 @enduml`,
             canvasItem: null,
             enduml: null,
-
         }
         this.timer = null;
         this.editorRef = React.createRef();
@@ -29,33 +27,68 @@ Bob -> Alice
     }
 
     componentDidMount() {
+        // this.startText();
+
+        this.getDomText(this.props.startValue)
+
         // this.EditorTextChange(this.state.editorContent)
-        const num = this.getLineNumber('@enduml');
-        this.setState({ enduml: num })
+        // const num = this.getLineNumber('@enduml');
+        // this.setState({ enduml: num })
         // this.insertStringAtLine("Hello, world!", 1);
     }
 
-    trunToText = (item) => {
-        const canvasitem = item;
-        const { editorContent } = this.state;
-        const lines = editorContent.split('\n');
-        console.log(canvasitem)
-        let dom = [];
-        for (var i = 0; i < canvasitem.length; i++) {
-            for (var j = 0; j < canvasitem[i].length; j++) {
-                console.log(canvasitem[i][j])
-                if (canvasitem[i][j].type == "shape") {
-                    console.log(canvasitem)
-                    dom.push(canvasitem[i])
-                }
-            }
+    // startText = () => {
+    //     const Dom = this.props.startValue;
+    //     this.getDomText(Dom)
 
+
+    // }
+
+    //從節點中取得text和line
+    getDomText = (dom) => {
+        let DomText = [];
+        for (var i = 0; i < dom.length; i++) {
+            let Dom = dom[i];
+            let domtext1 = Dom.text1;
+            let domtext2 = Dom.text2;
+            let line = Dom.lineTo;
+            DomText.push({ domtext1, domtext2, line });
         }
-        this.insertStringAtLine("Hello, world!", this.state.enduml);
-
+        this.trunToText(DomText);
 
     }
+    //將取得的text和line打印在editor畫面上
+    trunToText = (dom) => {
+        let item = dom;
+        let linenum = this.getLineNumber("@enduml");
 
+        this.deleteContentAtLine(linenum - 1);
+        for (var i = 0; i < item.length; i++) {
+            let dom = item[i];
+            linenum += 1;
+            this.insertStringAtLine(`${item[i].domtext1} ${item[i].line} ${item[i].domtext2}\n`, linenum)
+
+        }
+        console.log(linenum)
+        this.insertStringAtLine("@enduml", linenum + 2)
+        // const canvasitem = item;
+        // const { editorContent } = this.state;
+        // const lines = editorContent.split('\n');
+        // console.log(lines)
+        // let dom = [];
+        // for (var i = 0; i < canvasitem.length; i++) {
+        //     for (var j = 0; j < canvasitem[i].length; j++) {
+        //         console.log(canvasitem[i][j])
+        //         if (canvasitem[i][j].type == "shape") {
+        //             console.log(canvasitem)
+        //             dom.push(canvasitem[i])
+        //         }
+        //     }
+
+        // }
+
+    }
+    //取得指定字串的行數
     getLineNumber = (searchString) => {
         const editorInstance = this.editorRef.current.editor;
         const session = editorInstance.getSession();
@@ -65,7 +98,7 @@ Bob -> Alice
         console.log(`Line number of '${searchString}': ${position.row + 1}`);
         return position.row + 1
     };
-
+    //插入字串到自定位置
     insertStringAtLine = (stringToInsert, lineNumberToInsert) => {
         const text = "@enduml";
         const editorInstance = this.editorRef.current.editor;
@@ -77,6 +110,21 @@ Bob -> Alice
 
 
     };
+    deleteContentAtLine = (lineNumber) => {
+        console.log(lineNumber)
+        if (this.editorRef.current && this.editorRef.current.editor) {
+            const editor = this.editorRef.current.editor;
+            const session = editor.getSession();
+
+            // 刪除指定行數的內容
+            if (lineNumber >= 0 && lineNumber < session.getLength()) {
+                session.remove({
+                    start: { row: lineNumber, column: 0 },
+                    end: { row: lineNumber, column: Number.MAX_VALUE },
+                });
+            }
+        }
+    }
 
     EditorTextChange = (value) => {
         this.setState({ editorContent: value });
@@ -121,7 +169,7 @@ Bob -> Alice
                 ref={this.editorRef}
                 mode="javascript" // 设置编辑器的模式
                 theme="monokai" // 设置编辑器的主题
-                onChange={this.EditorTextChange} // 处理编辑器内容变化的回调函数
+                // onChange={this.EditorTextChange} // 处理编辑器内容变化的回调函数
                 name="code-editor"
                 editorProps={{ $blockScrolling: true }}
                 setOptions={{ useWorker: false }} // 配置选项（根据您的需求）

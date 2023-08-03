@@ -45,6 +45,8 @@ class SvgCanvas extends Component {
 
     // this.state.dongzuo = this.props.value;//获取sidebar拖拽图形的类型
     this.drawCanvas();
+    // console.log(this.props.startValue)
+
 
     this.state.canvas.addEventListener("dragover", this.handleDragOver);
     this.state.canvas.addEventListener("drop", this.handleDrop);
@@ -90,7 +92,7 @@ class SvgCanvas extends Component {
     // 绘制文字
 
 
-    this.reDrawShape();
+    this.reDrawShape(this.props.startValue);
   }
 
   reDrawShape = () => {//重畫圖形（拖拽動畫）
@@ -199,13 +201,7 @@ class SvgCanvas extends Component {
 
           }
 
-
-
-
-
         })
-
-
 
       }
     } else {
