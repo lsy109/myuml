@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { shape1 } from "./shapes";
+import { shape1, rectangle } from "./shapes";
 import parser from './parser'; // 导入 parser 文件
 import MainArea from './mainArea';
 import Sidebar from './sidebar';
+import { plantuml } from './plantuml';
+
 class SvgCanvas extends Component {
   constructor(props) {
     super(props);
@@ -22,7 +24,7 @@ class SvgCanvas extends Component {
       select: false,
       AceElement: null,
       DomID: 0,
-      text: "text",
+
 
 
     };
@@ -162,6 +164,7 @@ class SvgCanvas extends Component {
 
 
   };
+
   returnToMain = () => {
 
   }
@@ -285,7 +288,31 @@ class SvgCanvas extends Component {
     console.log(value)
   }
 
+  //給AceEditor用的畫圖function
+  EditordrawShape = (item) => {
+    let value = item;
+    for (var i = 0; i < value.length; i++) {
+      let item = value[i];
+      rectangle(this.state.context,
+        item.style.x, item.style.y,
+        item.style.width,
+        item.style.height,
+        item.style.cornerRadius,
+        item.style.fillstyle,
+        item.style.borderColor,
+        item.sender,
+        item.receiver,
+        item.arrow,
+        item.message,
+        item.style.font,
 
+      );
+
+    }
+
+
+
+  }
   render() {
 
 

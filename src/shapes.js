@@ -93,5 +93,41 @@ function id(DomID) {
     return DomID += 1
 }
 
+function drawRoundedRectangle(ctx, x, y, width, height, radius, fillColor, borderColor) {
+    ctx.fillStyle = fillColor;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 2;
 
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + width, y, x + width, y + height, radius);
+    ctx.arcTo(x + width, y + height, x, y + height, radius);
+    ctx.arcTo(x, y + height, x, y, radius);
+    ctx.arcTo(x, y, x + width, y, radius);
+    ctx.closePath();
 
+    ctx.fill();
+    ctx.stroke();
+}
+
+export function rectangle(ctx, x, y, width, height, radius, fillColor, borderColor, text1, text2, arrow, message, font) {
+    drawRoundedRectangle(ctx, x, y, width, height, radius, fillColor, borderColor);
+
+    // 绘制下面的长方形
+    drawRoundedRectangle(ctx, x, y + 100, width, height, radius, fillColor, borderColor);
+
+    ctx.setLineDash([5, 5]); // 设置虚线样式
+    ctx.strokeStyle = borderColor; // 黑色
+    ctx.lineWidth = 2; // 边框宽度
+    ctx.beginPath();
+    ctx.moveTo(x + (x / 4), y + (y / 4)); // 上方长方形的底边中心
+    ctx.lineTo(x + (x / 4), y + 100); // 下方长方形的顶边中心
+    ctx.stroke();
+
+    // 绘制文本
+    ctx.font = font;
+    ctx.fillStyle = borderColor; // 黑色
+    ctx.textAlign = "center";
+    ctx.fillText(text1, x + 50, y + 25); // 上方长方形的文本位置
+    ctx.fillText(text2, x + 50, y + 125); // 下方长方形的文本位置
+}

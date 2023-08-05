@@ -4,6 +4,7 @@ import React from "react";
 //hello bitch git test
 import 'ace-builds/src-noconflict/theme-monokai';
 import 'ace-builds/src-noconflict/mode-javascript';
+import { plantuml } from './plantuml';
 class Editor extends React.Component {
     constructor(props) {
         super(props);
@@ -29,7 +30,7 @@ class Editor extends React.Component {
     componentDidMount() {
         // this.startText();
 
-        this.getDomText(this.props.startValue);
+        // this.getDomText(this.props.startValue);
         // this.EditorTextChange(this.state.editorContent)
         // const num = this.getLineNumber('@enduml');
         // this.setState({ enduml: num })
@@ -139,19 +140,16 @@ class Editor extends React.Component {
     }
 
     textToImg = (value) => {
-        let Svgdom = [];
-        const text = /@startuml|@enduml/g;
-        const dom = value.replace(text, "")
-        const dom1 = dom.split("\n");
-        console.log(dom1);
-        for (var i = 1; i < dom1.length - 1; i++) {
-            const text = dom1[i].split("->");
-            Svgdom.push(text);
-
-        }
-        this.props.sendDataToParent(Svgdom);
+        let getDom = plantuml(value);
+        this.sendItemToMainArea(getDom);
+        console.log(getDom);
 
 
+
+    }
+
+    sendItemToMainArea = (getDom) => {
+        this.props.sendDataToParent(getDom);
     }
 
 

@@ -48,10 +48,4 @@ class Sidebar extends React.Component {
 
 export default Sidebar;
 
-function send(Data) {
-    render(
-        <SvgCanvas value={Data} />
-    )
-    console.log(Data)
 
-}

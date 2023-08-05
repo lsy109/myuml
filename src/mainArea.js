@@ -64,9 +64,11 @@ class MainArea extends React.Component {
 
     }
     getEditorItem = (value) => {
-        this.setState({ dataFromEditor: value })
-        this.SvgRef.current.dataFromEditor(value);
-        console.log(value)
+        // this.setState({ dataFromEditor: value })
+        // this.SvgRef.current.dataFromEditor(value);
+        // console.log(value)
+
+        this.SvgRef.current.EditordrawShape(value);
 
     }
 
