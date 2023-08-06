@@ -59,16 +59,16 @@ class Editor extends React.Component {
     }
     //將取得的text和line打印在editor畫面上
     trunToText = (dom) => {
-        let item = dom;
-        let linenum = this.getLineNumber("@enduml");
+        // let item = dom;
+        // let linenum = this.getLineNumber("@enduml");
 
-        this.deleteContentAtLine(linenum - 1);
-        for (var i = 0; i < item.length; i++) {
-            linenum += 1;
-            this.insertStringAtLine(`${item[i].domtext1} ${item[i].line} ${item[i].domtext2}\n`, linenum)
+        // this.deleteContentAtLine(linenum - 1);
+        // for (var i = 0; i < item.length; i++) {
+        //     linenum += 1;
+        //     this.insertStringAtLine(`${item[i].domtext1} ${item[i].line} ${item[i].domtext2}\n`, linenum)
 
-        }
-        this.insertStringAtLine("@enduml", linenum + 2)
+        // }
+        // this.insertStringAtLine("@enduml", linenum + 2)
         // const canvasitem = item;
         // const { editorContent } = this.state;
         // const lines = editorContent.split('\n');
@@ -141,10 +141,52 @@ class Editor extends React.Component {
 
     textToImg = (value) => {
         let getDom = plantuml(value);
-        this.sendItemToMainArea(getDom);
-        console.log(getDom);
+        const Dom = this.findUniqueData(getDom);
+        this.sendItemToMainArea(Dom);
 
 
+
+
+    }
+    //判斷是否有重複的字串
+    isDuplicate1(obj1, obj2) {
+        return (obj1.receiver === obj2.receiver && obj1.sender === obj2.sender) ||
+            (obj1.receiver === obj2.sender && obj1.sender === obj2.receiver);
+    }
+
+    findUniqueData(data) {
+        const uniqueData = [];
+        for (let i = 0; i < data.length; i++) {
+            let isDuplicate = false;
+            let num = 0;
+            let arrow = "";
+            for (let j = 0; j < uniqueData.length; j++) {
+                if (this.isDuplicate1(data[i], uniqueData[j])) {
+                    num = j;
+                    arrow = data[i].arrow;
+                    isDuplicate = true;
+                    break;
+                }
+            }
+
+            if (!isDuplicate) {
+                let data1 = this.trunToArray(data[i]);
+                // console.log(data1)
+                uniqueData.push(data1);
+            } else if (isDuplicate) {
+                uniqueData[num].arrow.push(data[i].arrow);
+
+            }
+        }
+
+        return uniqueData;
+    }
+
+    trunToArray(data) {
+        const dataArray = data;
+        // 修改 text 屬性為包含該值的陣列
+        dataArray.arrow = [dataArray.arrow];
+        return (dataArray)
 
     }
 

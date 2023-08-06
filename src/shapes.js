@@ -1,17 +1,24 @@
 
 
-export function shape1(x, y, context, dongzuo, text) {
+export function shape1(x, y, ctx, dongzuo, text) {
 
     const size = 50; // 正方形的尺寸
-    const color = "red"; // 正方形的颜色
+    const fillColor = "#AAAAAA"; // 正方形的颜色
     const lineWidth = 2; // 线条的宽度
     const text1 = text;
+    const text2 = "text2";
     const font = "24px Arial";
-    const textcolor = "black";
+    const borderColor = "black";
+    const arrow = "->";
+    const message = "";
+    const radius = 20;
+    const height = 50;
+    const width = 100;
+
     if (dongzuo == "graphics1") {
-        return graphics1(x, y, context, size, color, lineWidth, text, font, textcolor);
+        return rectangle(ctx, x, y, width, height, radius, fillColor, borderColor, text1, text2, arrow, message, font);
     } else if (dongzuo == "square") {
-        return square(x, y, context, size, color, lineWidth, text, font, textcolor);
+        return square(x, y, ctx, size, fillColor, lineWidth, text, font, borderColor);
     }
 
 
@@ -111,23 +118,134 @@ function drawRoundedRectangle(ctx, x, y, width, height, radius, fillColor, borde
 }
 
 export function rectangle(ctx, x, y, width, height, radius, fillColor, borderColor, text1, text2, arrow, message, font) {
-    drawRoundedRectangle(ctx, x, y, width, height, radius, fillColor, borderColor);
+    // let leftLineMoveX = x + (x / 4);
+    // let leftLineMoveY = y + (y / 4);
+    // let leftLineToX = x + (x / 4);
+    // let leftLineToY = y + 150;
 
+    let leftLine = {
+        leftLineMove: { x: x + (x / 4), y: y + (y / 4) },
+        leftLineTo: { x: x + (x / 4), y: y + 150 }
+    }
+    let rightLine = {
+        rightLineMove: { x: x + 150 + (x / 4), y: y + (y / 4) },
+        rightLineTo: { x: x + 150 + (x / 4), y: y + 150 }
+    }
+
+
+
+    // let rightLineMoveX = x + 150 + (x / 4);
+    // let rightLineMoveY = y + (y / 4);
+    // let rightLineToX = x + 150 + (x / 4);
+    // let rightLineToY = y + 150;
+
+
+    //畫左邊的圖
+    drawRoundedRectangle(ctx, x, y, width, height, radius, fillColor, borderColor);
     // 绘制下面的长方形
-    drawRoundedRectangle(ctx, x, y + 100, width, height, radius, fillColor, borderColor);
+    drawRoundedRectangle(ctx, x, y + 150, width, height, radius, fillColor, borderColor);
 
     ctx.setLineDash([5, 5]); // 设置虚线样式
     ctx.strokeStyle = borderColor; // 黑色
     ctx.lineWidth = 2; // 边框宽度
     ctx.beginPath();
-    ctx.moveTo(x + (x / 4), y + (y / 4)); // 上方长方形的底边中心
-    ctx.lineTo(x + (x / 4), y + 100); // 下方长方形的顶边中心
+    ctx.moveTo(leftLine.leftLineMove.x, leftLine.leftLineMove.y); // 上方长方形的底边中心
+    ctx.lineTo(leftLine.leftLineTo.x, leftLine.leftLineTo.y); // 下方长方形的顶边中心
     ctx.stroke();
 
     // 绘制文本
     ctx.font = font;
     ctx.fillStyle = borderColor; // 黑色
     ctx.textAlign = "center";
-    ctx.fillText(text1, x + 50, y + 25); // 上方长方形的文本位置
-    ctx.fillText(text2, x + 50, y + 125); // 下方长方形的文本位置
+    ctx.fillText(text2, x + 50, y + 25); // 上方长方形的文本位置
+    ctx.fillText(text2, x + 50, y + 175); // 下方长方形的文本位置
+
+
+    ctx.setLineDash([]);
+    //畫右邊的圖
+    drawRoundedRectangle(ctx, x + 150, y, width, height, radius, fillColor, borderColor);
+    // 绘制下面的长方形
+    drawRoundedRectangle(ctx, x + 150, y + 150, width, height, radius, fillColor, borderColor);
+
+    ctx.strokeStyle = borderColor; // 黑色
+    ctx.lineWidth = 2; // 边框宽度
+    ctx.beginPath();
+    ctx.setLineDash([5, 5]); // 设置虚线样式
+    ctx.moveTo(rightLine.rightLineMove.x, rightLine.rightLineMove.y); // 上方长方形的底边中心
+    ctx.lineTo(rightLine.rightLineTo.x, rightLine.rightLineTo.y); // 下方长方形的顶边中心
+    ctx.stroke();
+
+    // 绘制文本
+    ctx.font = font;
+    ctx.fillStyle = borderColor; // 黑色
+    ctx.textAlign = "center";
+    ctx.fillText(text1, x + 150 + 50, y + 25); // 上方长方形的文本位置
+    ctx.fillText(text1, x + 150 + 50, y + 175); // 下方长方形的文本位置
+
+    ctx.setLineDash([]);
+
+    drawLine(ctx, leftLine, rightLine, arrow);
+
+
+
+}
+
+export function drawLine(ctx, leftLine, rightLine, arrow) {
+    let context = ctx;
+    let left = leftLine;
+    let right = rightLine;
+    let arr = arrow;
+
+    let ArrowSize = 10;
+
+    if (arrow == "->") {
+        let moveX = leftLine.leftLineMove.x;
+        let moveY = leftLine.leftLineMove.y + 50;
+        let lineX = rightLine.rightLineMove.x;
+        let lineY = rightLine.rightLineMove.y + 50;
+
+        context.beginPath();
+        context.moveTo(moveX, moveY);
+        context.lineTo(lineX, lineY);
+        context.strokeStyle = "black";
+        context.lineWidth = 2;
+        context.stroke();
+
+        context.beginPath();
+        context.moveTo(lineX - ArrowSize, lineY - ArrowSize);
+        context.lineTo(lineX, lineY);
+        context.lineTo(lineX - ArrowSize, lineY + ArrowSize);
+        context.strokeStyle = "black";
+        context.fillStyle = "black";
+        context.lineWidth = 1;
+        context.fill();
+        context.stroke();
+    } else if (arrow == "<-") {
+        let moveX = leftLine.leftLineMove.x;
+        let moveY = leftLine.leftLineMove.y + 50;
+        let lineX = rightLine.rightLineMove.x;
+        let lineY = rightLine.rightLineMove.y + 50;
+
+        context.beginPath();
+        context.moveTo(moveX, moveY);
+        context.lineTo(lineX, lineY);
+        context.strokeStyle = "black";
+        context.lineWidth = 2;
+        context.stroke();
+
+        context.beginPath();
+        context.moveTo(moveX + ArrowSize, lineY + ArrowSize);
+        context.lineTo(moveX, lineY);
+        context.lineTo(moveX + ArrowSize, lineY - ArrowSize);
+        context.strokeStyle = "black";
+        context.fillStyle = "black";
+        context.lineWidth = 1;
+        context.fill();
+        context.stroke();
+    }
+
+
+
+
+
 }

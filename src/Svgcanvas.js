@@ -24,6 +24,21 @@ class SvgCanvas extends Component {
       select: false,
       AceElement: null,
       DomID: 0,
+      style: {
+        height: 50,
+        width: 100,
+        fillstyle: "#AAAAAA",//底的顔色 灰色
+        cornerRadius: 20, //圓角
+        strokeStyle: "#000000", //邊的顔色
+        font: "16px Arial",
+        x: 200,
+        y: 200,
+        borderColor: "#000000",
+      },
+      sender: "text2",
+      receiver: "text1",
+      message: "",
+      arrow: "->",
 
 
 
@@ -103,32 +118,32 @@ class SvgCanvas extends Component {
     const context = this.state.context;
     const lineWidth = 2;
 
-    for (var i = 0; i < item.length; i++) {
-      const shape = item[i]
-      shape.forEach((e) => {
-        if (e.type == "shape") {
-          context.beginPath();
-          context.fillStyle = e.color;
-          context.fillRect(e.x, e.y, e.width, e.height);
-          context.font = e.fontsize;
-          context.fillStyle = e.textcolor;
-          context.fillText(e.text, e.textX, e.textY);
-          context.stroke();
-          context.lineWidth = lineWidth;
-        } else if (e.type == "line") {
-          context.beginPath();
-          context.moveTo(e.movex, e.movey);
-          context.lineTo(e.linex, e.liney);
-          context.stroke();
-          context.lineWidth = lineWidth;
-        }
+    // for (var i = 0; i < item.length; i++) {
+    //   const shape = item[i]
+    //   shape.forEach((e) => {
+    //     if (e.type == "shape") {
+    //       context.beginPath();
+    //       context.fillStyle = e.color;
+    //       context.fillRect(e.x, e.y, e.width, e.height);
+    //       context.font = e.fontsize;
+    //       context.fillStyle = e.textcolor;
+    //       context.fillText(e.text, e.textX, e.textY);
+    //       context.stroke();
+    //       context.lineWidth = lineWidth;
+    //     } else if (e.type == "line") {
+    //       context.beginPath();
+    //       context.moveTo(e.movex, e.movey);
+    //       context.lineTo(e.linex, e.liney);
+    //       context.stroke();
+    //       context.lineWidth = lineWidth;
+    //     }
 
 
-      })
+    //   })
 
 
 
-    }
+    // }
   }
   handleDragOver = (event) => {
 
@@ -149,17 +164,32 @@ class SvgCanvas extends Component {
   drawSquare = (x, y) => {
 
     const context = this.state.context;
-
+    
 
     // shape1(x, y, context);
+    rectangle(
+      context,
+      x,
+      y,
+      this.state.style.width,
+      this.state.style.height,
+      this.state.style.cornerRadius,
+      this.state.style.fillstyle,
+      this.state.style.borderColor,
+      this.state.sender,
+      this.state.receiver,
+      this.state.arrow,
+      this.state.message,
+      this.state.style.font,
 
+    );
 
-    const shape = shape1(x, y, context, this.props.massageSidebar, this.state.text);
+    // const shape = shape1(x, y, context, this.props.massageSidebar, this.state.text);
 
-    this.state.canvasItem.push(shape)
-    this.props.onCallback(this.state.canvasItem)
+    // this.state.canvasItem.push(shape)
+    // this.props.onCallback(this.state.canvasItem)
 
-    parser.toEditor(this.state.canvasItem);
+    // parser.toEditor(this.state.canvasItem);
 
 
 
