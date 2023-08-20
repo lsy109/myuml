@@ -10,6 +10,7 @@ class Editor extends React.Component {
         super(props);
         this.state = {
             editorContent: `@startuml
+            
 @enduml`,
             canvasItem: null,
             enduml: null,

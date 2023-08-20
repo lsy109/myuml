@@ -1,14 +1,17 @@
 export function plantuml(value) {
     const style = {
-        height: 50,
-        width: 100,
+        height: 40,
+        width: 80,
         fillstyle: "#AAAAAA",//底的顔色 灰色
         cornerRadius: 20, //圓角
         strokeStyle: "#000000", //邊的顔色
         font: "16px Arial",
-        x: 200,
-        y: 200,
+        x: 160,
+        y: 180,
         borderColor: "#000000",
+        lineWidth: 2,
+        strokeStyle: "black",
+        LineDash: [5, 5],
 
 
 

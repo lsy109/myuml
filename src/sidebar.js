@@ -1,5 +1,5 @@
 import React from "react";
-import SvgCanvas from "./Svgcanvas";
+import './index.css'
 import { render } from '@testing-library/react';
 
 class Sidebar extends React.Component {
@@ -22,9 +22,10 @@ class Sidebar extends React.Component {
     }
 
     handleDragStart = (event) => {
+        const isMousePressed = true;
         const draggedDiv = event.target;
         console.log("拖动的是：", draggedDiv.textContent);
-        this.props.sendDataToParent(draggedDiv.textContent);
+        this.props.sendDataToParent(draggedDiv.textContent, isMousePressed);
         // send(draggedDiv.textContent)
 
 

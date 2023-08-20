@@ -1,85 +1,73 @@
-import React from "react";
-import Canvas from "./canvas";
-import Editor from "./AceEditor";
-import Sidebar from "./sidebar";
-import SvgCanvas from "./Svgcanvas";
+import React, { Component } from 'react';
 import './index.css';
-
-
-class MainArea extends React.Component {
-
+import Editor from './aceEditor';
+import SvgCanvas from './svgCanvas';
+import Sidebar from './sidebar';
+class App extends Component {
     constructor(props) {
         super(props);
-        this.mainAreaRef = React.createRef();
-        this.AceRef = React.createRef();
+        this.elementRef = React.createRef();
+        this.konRef = React.createRef();
         this.EditorRef = React.createRef();
-        this.SvgRef = React.createRef();
+        this.sideBarRef = React.createRef();
         this.state = {
+            windowDimensions: {
+                width: window.innerWidth,
+                height: window.innerHeight,
+
+            },
             AceElement: null,
             canvasItem: [],
             massagefromSidebar: '',
             dataFromEditor: null,
             Domparser: [{ text1: "Bob", lineTo: "->", text2: "Alice", lineText: "hello,", Domx: 250, Domy: 250, line: { movex: 250, movey: 250, linex: 100, liney: 25, }, width: 250, height: 250, fontsize: "24px Arial", textcolor: "black", textx: 250, texty: 250 },
-
             ],
-        }
 
-
-
+        };
     }
-
 
     componentDidMount() {
+        window.addEventListener('resize', this.updateWindowDimensions);
+        if (this.elementRef.current) {
+            const elementWidth = this.elementRef.current.offsetWidth;
+            const elementHeight = this.elementRef.current.offsetHeight;
 
-        const getDiv = this.AceRef.current;
-        const divElement = getDiv.getBoundingClientRect();
-
-        this.setState({ AceElement: divElement })
-        this.state.AceElement = divElement;
-
-
-
-
-
+            console.log('Element Width:', elementWidth);
+            console.log('Element Height:', elementHeight);
+            this.konRef.current.getDivElement(elementHeight, elementWidth);
+        }
     }
 
-    getCanvasItem = (item) => {//将SvgCanvas的item传入Editor
-        this.setState({ canvasItem: item });
-        this.EditorRef.current.trunToText(item);
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.updateWindowDimensions);
     }
 
-    getDataFromSidebar = () => {
-
-    }
-    text = () => {
-
-        console.log("fun")
-        this.EditorRef.current.text();
-    }
-    handleDragStart = (data) => {//取得sidebar拖拽的方块的值
+    updateWindowDimensions = () => {
+        this.setState({
+            windowDimensions: {
+                width: window.innerWidth,
+                height: window.innerHeight,
+            },
+        });
+    };
+    handleDragStart = (data, isMousePressed) => {//取得sidebar拖拽的方块的值
         // 正确做法：使用函数形式的setState
         // 正确做法：使用函数形式的setState
         // 正确做法：在setState的回调函数中处理
-        this.setState({ massagefromSidebar: data });
+
+        this.konRef.current.getSidebarValue(data, isMousePressed);
 
     }
+
+
     getEditorItem = (value) => {
         // this.setState({ dataFromEditor: value })
         // this.SvgRef.current.dataFromEditor(value);
         // console.log(value)
-
-        this.SvgRef.current.EditordrawShape(value);
+        console.log(value)
+        this.konRef.current.EditorDrawShape(value);
 
     }
-
-
-
-
-
-
-
-
-
 
     render() {
         const AceElement = this.state;
@@ -87,54 +75,42 @@ class MainArea extends React.Component {
         const { canvasItem } = this.state;
         const { dataFromEditor } = this.state;
         const { Domparser } = this.state;
-
-
-
         return (
             <div className="mainArea">
+                <div className="bar">
+                    Bar
+                </div>
+                <div className="contentContainer">
+                    <div className="aceEditor">
+                        <Editor
+                            ref={this.EditorRef}
+                            item={canvasItem}
+                            sendDataToParent={this.getEditorItem}
+                            startValue={Domparser} />
 
-                <nav>
-                    <label className="logo">myUml <label className="version">v20230717</label>
-                    </label>
-                </nav>
+                    </div>
+                    <div className='canvas'>
+                        <div className="svgCanvas" ref={this.elementRef}>
+                            <SvgCanvas
+                                ref={this.konRef}
 
-                <div className="canvasPanel" ref={this.mainAreaRef}>
-                    <SvgCanvas
-                        ref={this.SvgRef}
-                        AceElement={AceElement}
-                        onCallback={this.getCanvasItem}
-                        massageSidebar={massagefromSidebar}
-                        dataFromEditor={dataFromEditor}
-                        startValue={Domparser}
+                            />
 
-                    />
+
+                        </div>
+                        <div className="sidebar">
+                            <Sidebar
+                                sendDataToParent={this.handleDragStart}
+
+                            />
+
+                        </div>
+                    </div>
 
                 </div>
-                <div className="sideBar">
-                    <Sidebar
-                        sendDataToParent={this.handleDragStart} />
-
-                </div>
-
-
-                <div ref={this.AceRef} className="aceEditor">
-                    <Editor
-                        ref={this.EditorRef}
-                        item={canvasItem}
-                        sendDataToParent={this.getEditorItem}
-                        startValue={Domparser}
-
-                    />
-                </div>
-
-
-
             </div>
-        )
+        );
     }
-
-
 }
 
-
-export default MainArea;
+export default App;
