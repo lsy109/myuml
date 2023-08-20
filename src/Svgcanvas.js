@@ -104,8 +104,6 @@ class Canvas extends Component {
 
     handleDragEnd = (event) => {
         this.setState({ draggedElement: null });
-        console.log(event)
-
 
 
     };
@@ -115,15 +113,13 @@ class Canvas extends Component {
     handleMouseMove = () => {
         const text1 = "text1";
         const text2 = "text2";
-        const arrow = "->";
+        const arrow = ["->"];
         const cursorPosition = this.stageRef.current.getPointerPosition();
 
         if (this.state.isMousePressed) {
             const x = cursorPosition.x;
             const y = cursorPosition.y;
-            const drawshape = presetShape1(x, y, text1, text2);
-            console.log(drawshape)
-            console.log(this.state.shape)
+            const drawshape = presetShape1(x, y, text1, text2, arrow);
             this.setState((prevState) => ({
                 shape: [...prevState.shape, drawshape],
             }));
@@ -179,13 +175,12 @@ class Canvas extends Component {
         const xRange = [0, this.state.parentWidth];
         const yRange = [0, this.state.parentHeight];
         const generatedCoordinates = this.state;
-
         const coordinate = this.generateUniqueCoordinate(xRange, yRange, generatedCoordinates);
         this.setState(prevState => ({
             generatedCoordinates: [...prevState.generatedCoordinates, coordinate],
         }));
         for (var i = 0; i < value.length; i++) {
-            const drawshape = presetShape1(coordinate[0], coordinate[1], value[i].receiver, value[i].sender);
+            const drawshape = presetShape1(coordinate[0], coordinate[1], value[i].receiver, value[i].sender, value[i].arrow);
 
             this.setState((prevState) => ({
                 shape: [...prevState.shape, drawshape],
@@ -270,7 +265,7 @@ class Canvas extends Component {
                                                     stroke="black"
                                                     strokeWidth={shapeItem.strokeWidth}
                                                     draggable={shapeItem.draggable}
-                                                    dash={[5, 5]} // 設定虛線的樣式，這裡的數字表示虛線和空白之間的長度
+                                                    dash={shapeItem.dash} // 設定虛線的樣式，這裡的數字表示虛線和空白之間的長度
                                                 />)
                                         }
 

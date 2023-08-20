@@ -32,8 +32,7 @@ class App extends Component {
             const elementWidth = this.elementRef.current.offsetWidth;
             const elementHeight = this.elementRef.current.offsetHeight;
 
-            console.log('Element Width:', elementWidth);
-            console.log('Element Height:', elementHeight);
+
             this.konRef.current.getDivElement(elementHeight, elementWidth);
         }
     }
@@ -64,7 +63,7 @@ class App extends Component {
         // this.setState({ dataFromEditor: value })
         // this.SvgRef.current.dataFromEditor(value);
         // console.log(value)
-        console.log(value)
+
         this.konRef.current.EditorDrawShape(value);
 
     }
