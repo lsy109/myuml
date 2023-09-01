@@ -40,7 +40,10 @@ class Sidebar extends React.Component {
             <div className="container">
                 <div draggable="true" className="color1">graphics1</div>
                 <div draggable="true" className="color2">square</div>
-
+                <div draggable="true" className="color2">Actor</div>
+                <div draggable="true" className="color2">Databases</div>
+                <div draggable="true" className="color2">Boundary</div>
+                <div draggable="true" className="color2">Entity</div>
             </div>
 
         )

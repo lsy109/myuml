@@ -77,7 +77,7 @@ class App extends Component {
         return (
             <div className="mainArea">
                 <div className="bar">
-                    Bar
+                    MyUML
                 </div>
                 <div className="contentContainer">
                     <div className="aceEditor">

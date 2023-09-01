@@ -31,6 +31,7 @@ export function plantuml(value) {
 
     // 遍歷每行
     for (const line of linesArray) {
+        console.log(line)
         const parts = line.split(':');
         if (parts.length > 1) {
             if (parts.length === 2) {
@@ -49,6 +50,7 @@ export function plantuml(value) {
                         lineText: lineText,
                         arrow: arrowSymbol,
                         style,
+                        type: "Dom"
                     });
                 }
             }
@@ -68,15 +70,17 @@ export function plantuml(value) {
                     lineText: "",
                     arrow: arrowSymbol,
                     style,
+                    type: "Dom"
                 });
             }
         }
 
 
     }
-
+    console.log(resultArray)
     // 打印結果陣列
     return (resultArray)
+
 
 
     // 使用map函数处理每一行文本
