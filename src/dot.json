@@ -1,0 +1,19 @@
+{
+    "IntroductionToComputer": "digraph G {\n\t\"IntroductionToComputer\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "DiscreteMathematics": "digraph G {\n\t\"DiscreteMathematics\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "ProgrammingPython1": "digraph G {\n\t\"ProgrammingPython1\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "ProgrammingPython2": "digraph G {\n\t\"ProgrammingPython2\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "DataStructures": "digraph G {\n\t\"DataStructures\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "Algorithms": "digraph G {\n\t\"Algorithms\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "SoftwareEngineering": "digraph G {\n\t\"SoftwareEngineering\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "sci1": "digraph G {\n\t\"sci1\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "sci2": "digraph G {\n\t\"sci2\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "edu1": "digraph G {\n\t\"edu1\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "edu2": "digraph G {\n\t\"edu2\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "literary1": "digraph G {\n\t\"literary1\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "literary2": "digraph G {\n\t\"literary2\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "art1": "digraph G {\n\t\"art1\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "art2": "digraph G {\n\t\"art2\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "medicine1": "digraph G {\n\t\"medicine1\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}",
+    "medicine2": "digraph G {\n\t\"medicine2\" -> \"Programming\"\n\t\"Programming\" -> \"Python1\"\n\t\"Programming\" -> \"Python2!\"\n}"
+}

@@ -1,67 +1,655 @@
-/* index.css */
-.mainArea {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap');
+
+* {
+    padding: 0;
+    margin: 0;
+    text-decoration: none;
+    list-style: none;
 }
 
-.bar {
-  width: 100%;
-  height: 10%;
-  background-color: rgb(0, 57, 246);
+body {
+    font-family: 'Nunito', sans-serif;
+    margin: 0;
+    background-color: #B8BAC8;
 }
 
-.contentContainer {
-  flex: 1;
-  display: flex;
+/*nav start*/
+nav {
+    position: absolute;
+    /* position: fixed; 固定*/
+    height: 50px;
+    width: 100%;
+    background: #1A4561;
+    z-index: 9999;
 }
 
-.aceEditor {
-  flex: 20;
-  background-color: lightgray;
+.logo {
+    float: left;
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    padding-left: 20px;
+    padding-right: 5px;
+    line-height: 50px;
+}
+
+.version {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    padding-top: 25px;
+}
+
+nav ul {
+    float: left;
+}
+
+nav li {
+    text-transform: uppercase;
+    float: left;
+    margin: 0px 5px;
+    line-height: 50px;
+}
+
+.icon {
+    border: 1px solid transparent;
+    color: #fff;
+    margin-left: 10px;
+    margin-right: -4px;
+}
+
+nav a {
+    text-decoration: none;
+    font-size: 15px;
+    color: #fff;
+    padding: 5px 7px;
+    border: 1px solid transparent;
+}
+
+li a:hover {
+    color: #fff;
+    /* background-color: #2F7BB1; */
+    border-radius: 8px;
+    border-color: #fff;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #1A4561;
+    min-width: max-content;
+}
+
+.dropdown-content a {
+    text-transform: none;
+    color: #fff;
+    line-height: 15px;
+    font-size: 13px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    border: 0px solid transparent;
+}
+
+.drop:hover .dropdown-content {
+    display: block;
+    border: 0px solid transparent;
+    border-radius: 0px 0px 5px 5px;
+}
+
+.dropdown-content :hover {
+    background-color: #2F7BB1;
+    color: #fff;
+    border: 0px solid transparent;
+    border-radius: 5px;
+}
+
+#searchDiv {
+    display: inline;
+    float: right;
+    line-height: 50px;
+    margin-right: 20px;
+}
+
+#search {
+    height: 20px;
+    padding-left: 10px;
+    border-radius: 15px;
+    font-size: 15px;
+}
+
+/*nav end*/
+
+/*checkBox start*/
+#display-area {
+    position: absolute;
+    text-align: center;
+    top: 55px;
+    left: 1%;
+    height: 3%;
+    z-index: 1;
+}
+
+#checkbox-area {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    height: 3%;
+}
+
+.display-label {
+    color: rgb(0, 0, 0);
+}
+
+/*checkBox end*/
+
+/*tree start*/
+.title {
+    margin-left: 5px;
+    margin-top: 5px;
+    font-size: 18px;
+}
+
+#container {
+    position: relative;
+    width: 98%;
+    left: 1%;
+}
+
+.main-area {
+    position: relative;
+    height: 95vh;
+    min-height: 685px;
+    /*main不隨視窗改變*/
+    z-index: 0;
+}
+
+.area {
+    position: absolute;
+    width: calc(33%);
+    height: calc(100% - 80px);
+    top: 80px;
+    border-radius: 10px;
+}
+
+#sourceArea {
+    left: 0%;
+    background-color: #EBF1E4;
+}
+
+#ace-editor {
+    position: relative;
+    border-radius: 10px;
+    margin: 3px 10px;
+}
+
+#editPanelArea {
+    left: calc(33.5%);
+    overflow: hidden;
+    background-color: #FBF5DA;
+}
+
+#editDiv {
+    position: relative;
+    border: 1px solid;
+    border-radius: 10px;
+    margin: 3px 10px;
+    height: calc(100% - 45px);
+    overflow: hidden;
 }
 
 
-.canvas {
-  display: flex;
-  flex: 80;
-  background-color: rgb(255, 255, 255);
-
+#resetBtn {
+    position: absolute;
+    z-index: 5;
+    top: 5px;
+    right: 5px;
 }
 
-.canvas .svgCanvas {
-  flex: 80;
+img {
+    /*等比例縮放*/
+    max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
 }
 
-.canvas .sidebar {
-  flex: 20;
+svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#treeArea {
+    right: 0%;
+    background-color: #FDE9D8;
+}
+
+#toolTree {
+    position: absolute;
+    width: 33%;
+    height: 50%;
+    overflow: auto;
+    top: 0%;
+}
+
+#field {
+    position: absolute;
+    width: 27%;
+    height: 50%;
+    top: 0%;
+    left: 28%;
+    overflow: auto;
+}
+
+#subject {
+    position: absolute;
+    width: 45%;
+    height: 50%;
+    left: 55%;
+    top: 0%;
+    overflow: auto;
+}
+
+#unit {
+    position: absolute;
+    width: 100%;
+    height: calc(49%);
+    top: 50%;
+}
+
+.ReactVirtualized__Grid__innerScrollContainer {
+    overflow: auto !important;
+    height: calc(100%) !important;
+    max-height: fit-content !important;
+}
+
+#titleInput {
+    margin-left: 15px;
+    font-size: 13px;
+    width: 130px;
+    padding-left: 8px;
+    border-radius: 15px;
+}
+
+.errorMsg {
+    margin-left: 5px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #ff0000;
+}
+
+.btn {
+    font-size: 10px;
+    color: #000;
+    margin-left: 3px;
+    border-radius: 20px;
+    border-width: 2px;
+    border: 1px solid #000;
+    background-color: transparent;
+    cursor: pointer;
+    padding: 2px;
+}
+
+.btn:hover {
+    color: #fff;
+    background-color: #2F7BB1;
+    border-color: #2F7BB1;
+}
+
+.delbtn {
+    display: inline;
+    margin-left: 15px;
+    font-size: 13px;
+    width: 130px;
+    padding-left: 8px;
+}
+
+.btnImg {
+    background-color: transparent;
+    border: 0px;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    border-radius: 50%;
+    margin-left: 3px;
+    top: -4px;
+}
+
+.addPic {
+    content: url(./img/add.png);
+}
+
+.removePic {
+    content: url(./img/remove.png);
+}
+
+#addBtn :hover {
+    content: url(./img/addHover.png);
+    border-radius: 50%;
+    background-color: #2F7BB1;
+}
+
+#removeBtn :hover {
+    content: url(./img/removeHover.png);
+    border-radius: 50%;
+    background-color: #2F7BB1;
+}
+
+.child-content {
+    display: none;
+    margin-left: 15px;
+}
+
+.subject-child {
+    margin-left: 15px;
+}
+
+li {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* #field li{
+    cursor: pointer;
+    user-select: none;
+}
+
+#subject li{
+    cursor: pointer;
+    user-select: none;
+}
+
+.caret{
+    cursor: pointer;
+    user-select: none;
+} */
+
+#shape {
+    position: relative;
+    border: 1px solid;
+    border-radius: 10px;
+    margin: 3px 10px;
+    height: calc(100% - 45px);
+    overflow: hidden;
+}
+
+.shapeContainer {
+    position: relative;
+    border: 1px solid;
+    background-color: mintcream;
+    height: calc(100% - 45px);
+    border-radius: 10px;
+    margin: 3px 10px;
+    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.shapeItem {
+    width: calc(25% - 16px);
+    padding-top: calc(25% - 16px);
+    float: left;
+    margin: 8px;
+    box-sizing: border-box;
+    text-align: center;
+    position: relative;
+    background-color: #f4f4f4;
+    border: 1px solid #ccc;
+    overflow: hidden;
+}
+
+.shapeItem span {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
 }
 
 
-
-
-.container {
-  flex: 20;
-  height: 30%;
-  width: 100%;
-  background-color: #763131;
+.tool::before {
+    content: "\1F5C0";
+    color: black;
+    display: inline-block;
+    margin-right: 2px;
 }
 
-.container .color1 {
-  flex: 10;
-  height: 30%;
-  width: 30%;
-
-  background-color: #e221de;
+.tool-down::before {
+    content: "\1F5C1";
 }
 
-.container .color2 {
-  flex: 50;
-  height: 30%;
-  width: 30%;
-
-  background-color: #e60d0d;
+.leaf::before {
+    content: "\1F5CE";
+    margin-right: 2px;
 }
 
-/* 其他需要的样式 */
+.active {
+    display: block;
+    cursor: pointer;
+    user-select: none;
+    margin-left: 22px;
+}
+
+#resizor1 {
+    position: absolute;
+    top: calc(50% + 25px);
+    left: calc(33%);
+    cursor: col-resize;
+    background-color: rgb(0, 0, 0);
+    border-radius: 5px;
+    width: calc(0.5%);
+    height: 35px;
+    background-size: cover;
+    background-position: center;
+    z-index: 10;
+}
+
+#resizor2 {
+    position: absolute;
+    top: calc(50% + 25px);
+    right: calc(33%);
+    cursor: col-resize;
+    background-color: rgb(0, 0, 0);
+    border-radius: 5px;
+    width: calc(0.5%);
+    height: 35px;
+    background-size: cover;
+    background-position: center;
+    z-index: 10;
+}
+
+/*tree end*/
+
+#status {
+    position: relative;
+    width: 100%;
+    height: 35px;
+    background: #F3E2E4;
+    border-radius: 10px;
+    margin-top: 5px;
+}
+
+#statusNow {
+    line-height: 35px;
+}
+
+#statusContent {
+    margin-left: 5px;
+}
+
+footer {
+    display: block;
+    position: absolute;
+    width: 100%;
+    margin-top: 10px;
+    text-align: center;
+    background: #212121;
+    color: #c8c8c8;
+    line-height: 1.5;
+}
+
+/* scroll bar */
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* scroll bar end */
+#yourSVGElementId {
+    width: 500px;
+    height: 500px;
+}
+
+#highlighted-border:hover {
+    cursor: crosshair;
+    pointer-events: all;
+}
+
+@keyframes flashing {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.flash {
+    animation: flashing 1s infinite;
+}
+
+#actor {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\actor.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Boundary {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\boundary.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Control {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\control.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Entity {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\entity.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Database {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\database.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Collections {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\collections.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Queue {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\queue.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Arrow1 {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\arrow1.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Arrow2 {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\arrow2.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Arrow3 {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\arrow3.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Arrow4 {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\arrow4.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+
+#text {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\text.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#Participant {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\participant.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#activate {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\activate.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#destroy {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\destroy.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}

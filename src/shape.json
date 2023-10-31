@@ -1,0 +1,31 @@
+{
+    "shape": {
+        "Shape": {
+            "text": "text -> text"
+        },
+        "Actor": {
+            "text": "actor Actor"
+        },
+        "Boundary": {
+            "text": "boundary Boundary"
+        },
+        "Control": {
+            "text": "control Control"
+        },
+        "Entity": {
+            "text": "entity Entity"
+        },
+        "Database": {
+            "text": "database Database"
+        },
+        "Collections": {
+            "text": "collections Collections"
+        },
+        "Queue": {
+            "text": "queue Queue"
+        },
+        "Participant": {
+            "text": "participant Text"
+        }
+    }
+}
