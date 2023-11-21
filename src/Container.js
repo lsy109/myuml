@@ -16,28 +16,63 @@ class Container extends React.Component {
 
         this.state = {
             statusContent: '',
+            selectValue: '',
         };
+        this.mainAreaRef = React.createRef();
     }
 
+    componentDidMount() {
+        this.ToMainArea()
+
+
+    }
+    componentDidUpdate(prevProps, prevState) {
+        if (this.state.selectValue !== prevState.selectValue) {
+            // selectValue发生变化，触发你的函数
+            this.ToMainArea();
+        }
+    }
     handleStatusChange = (content) => {
         // console.log(content);
-        console.log("ll")
+
 
         this.setState({
             statusContent: `${content}`
         });
     }
 
+    selectValue = (value) => {
+        this.setState({ selectValue: value })
+        // this.ToMainArea();
+        // if (this.mainAreaRef.current) {
+        //     console.log("kk")
+        // }
+        // this.mainAreaRef.current.selectChangeDiv(value)
+
+    }
+    ToMainArea = () => {
+        this.mainAreaRef.current.selectChangeDiv(this.state.selectValue)
+
+
+
+    }
+
+
     render() {
+        const value = this.state.selectValue;
         return (
             <div id="container">
 
                 {/* which display */}
-                <DisplayArea />
+                <DisplayArea
+                    getSelectValue={this.selectValue}
+                />
 
                 {/* main area */}
                 <MainArea
                     onStatusChange={this.handleStatusChange}
+                    selectValue={value}
+                    ref={this.mainAreaRef}
                 />
 
                 {/* Stutas Bar */}

@@ -2,6 +2,7 @@ import React from "react";
 import AceEditor from "react-ace";
 import 'brace/mode/dot';
 import 'brace/theme/twilight';
+import { line } from "d3";
 
 class Editor extends React.Component {
     constructor(props) {
@@ -57,81 +58,7 @@ class Editor extends React.Component {
         console.log(value1, value2, value3)
     }
 
-    // insertStringAboveFirstSymbol(inputString) {
-    //     const editor = this.aceRef.current.editor;
-    //     const content = editor.getValue(); // 从AceEditor中获取当前内容
-    //     const lines = content.split('\n');
-    //     const symbols = ['->', '<-', '-->', '<--'];
 
-    //     // 寻找第一次出现符号的行数
-    //     let indexToInsert = -1;
-    //     for (let i = 0; i < lines.length; i++) {
-    //         for (let symbol of symbols) {
-    //             if (lines[i].includes(symbol)) {
-    //                 indexToInsert = i + 1; // 修改此处，使得新的字符串插入到符号所在行的下方
-    //                 break;
-    //             }
-    //         }
-    //         if (indexToInsert !== -1) {
-    //             break;
-    //         }
-    //     }
-
-    //     // 如果找到符号，则在它的下一行插入新的字符串
-    //     if (indexToInsert !== -1) {
-    //         lines.splice(indexToInsert, 0, inputString);
-    //     }
-    //     // 如果没有找到特定符号，则搜索@enduml
-    //     else {
-    //         indexToInsert = lines.indexOf('@enduml');
-    //         if (indexToInsert !== -1) {
-    //             lines.splice(indexToInsert, 0, inputString);
-    //         }
-    //     }
-
-    //     if (indexToInsert !== -1) {
-    //         const updatedValue = lines.join('\n');
-    //         // 使用定时器来确保内容被正确更新
-    //         this.interval = setInterval(() => {
-    //             this.handleChange(updatedValue);
-    //             clearInterval(this.interval);
-    //         }, 1);
-
-    //         // 打印更改后的字符串
-    //         console.log(updatedValue);
-    //     }
-    //     else {
-    //         // 如果都没有找到符号或@enduml，则打印一条消息或其他处理
-    //         console.log("没有找到匹配的符号或@enduml");
-    //     }
-    // }
-    // insertStringAboveFirstSymbol(inputString) {
-    //     const editor = this.aceRef.current.editor;
-    //     const content = editor.getValue(); // 从AceEditor中获取当前内容
-    //     const lines = content.split('\n');
-
-    //     // 搜索@enduml的行数
-    //     let indexToInsert = lines.indexOf('@enduml');
-    //     if (indexToInsert !== -1) {
-    //         lines.splice(indexToInsert, 0, inputString); // 插入新的字符串
-    //     }
-
-    //     if (indexToInsert !== -1) {
-    //         const updatedValue = lines.join('\n');
-    //         // 使用定时器来确保内容被正确更新
-    //         this.interval = setInterval(() => {
-    //             this.handleChange(updatedValue);
-    //             clearInterval(this.interval);
-    //         }, 1);
-
-    //         // 打印更改后的字符串
-    //         console.log(updatedValue);
-    //     }
-    //     else {
-    //         // 如果没有找到@enduml，则打印一条消息或其他处理
-    //         console.log("没有找到@enduml");
-    //     }
-    // }
     insertStringAboveFirstSymbol(inputString) {
         const editor = this.aceRef.current.editor;
         const content = editor.getValue();
@@ -200,6 +127,89 @@ class Editor extends React.Component {
     }
 
 
+    modifySequenceDiagram = (originalCode, test1, test2, test3, text4) => {
+        const lines = originalCode.split('\n');
+        const modifiedLines = [];
+        let insertIndex = -1;
+
+        for (let index = 0; index < lines.length; index++) {
+            const line = lines[index];
+            modifiedLines.push(line);
+
+            if (line.includes(test1) && line.includes(test2)) {
+                insertIndex = index;
+            }
+
+            if (line.trim() === 'end' && insertIndex !== -1) {
+                test3.forEach(item => modifiedLines.splice(index, 0, item));
+                insertIndex = -1;  // Reset insert index
+            }
+        }
+
+        return modifiedLines.join('\n');
+    }
+
+    rearrangeLines = (text1, text2, currentText) => {
+        // 將當前文本分割成行
+
+
+        let lines = currentText.match(/[^\r\n]+/g);
+
+        // 找到 text1 所在的行數
+
+
+        // 找到 text2 中每個元素所在的行數及內容
+        let text2Lines = text2.map(text => {
+            let lineIndex = lines.findIndex(line => line.includes(text));
+            return { line: lines[lineIndex], index: lineIndex };
+        });
+
+        // // 過濾掉未找到的行
+        text2Lines = text2Lines.filter(line => line.index !== -1);
+
+        // // 對 text2Lines 進行排序，以確保按文本原始順序移動
+        text2Lines.sort((a, b) => a.index - b.index);
+        const len = text2Lines.length
+
+        // // 從原文本中移除這些行
+        text2Lines.forEach(line => {
+
+            const index = lines.indexOf(line.line);
+            if (index > -1) {
+                // 存在，使用splice方法删除它
+                lines.splice(index, 1);
+            }
+            // lines.splice(line.index, len);
+        });
+        let text1LineIndex = lines.findIndex(line => line.includes(text1));
+
+        // 將這些行插入到 text1 所在行的下面
+        lines.splice(text1LineIndex + 1, 0, ...text2Lines.map(line => line.line));
+
+        // // 重新組合成新的文本
+        return lines.join('\n');
+    }
+
+
+    ifelseFunction = (text1, text2, text3) => {
+        if (text1 != null && text2 == null && text3 == null) {
+
+            this.insertStringAboveFirstSymbol(text1)
+        } else if (text1 != null && text2 === "" && text3 === "") {
+
+        }
+    }
+    ifelseFunction2 = (text1, text2) => {
+        if (text1 != null && text2 != null) {
+
+
+            const originalCode = this.aceRef.current.editor.getValue();
+            console.log(originalCode)
+            const newValue = this.rearrangeLines(text2, text1, originalCode);
+
+            this.aceRef.current.editor.setValue(newValue)
+        }
+    }
 
 
 
@@ -207,18 +217,6 @@ class Editor extends React.Component {
 
 
 
-
-
-
-
-
-
-
-
-    // handleChange = (newValue) => {
-    //     console.log(newValue)
-    //     this.setState({ value: newValue });
-    // }
 
     render() {
         let annotations = null;
@@ -234,6 +232,8 @@ class Editor extends React.Component {
         }
 
         return (
+
+
 
             <AceEditor
                 fontSize="15px"

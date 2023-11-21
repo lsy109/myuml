@@ -5,6 +5,14 @@
     margin: 0;
     text-decoration: none;
     list-style: none;
+    -webkit-user-select: none;
+    /* Chrome, Safari, Opera */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* Internet Explorer */
+    user-select: none;
+    /* 标准语法 */
 }
 
 body {
@@ -387,31 +395,39 @@ li {
     height: calc(100% - 45px);
     border-radius: 10px;
     margin: 3px 10px;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     flex-wrap: wrap;
 }
 
 .shapeItem {
     width: calc(25% - 16px);
-    padding-top: calc(25% - 16px);
-    float: left;
+    height: calc(25% - 16px);
     margin: 8px;
     box-sizing: border-box;
-    text-align: center;
     position: relative;
     background-color: #f4f4f4;
     border: 1px solid #ccc;
     overflow: hidden;
 }
 
-.shapeItem span {
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-    right: 0;
-    text-align: center;
+.shapeItem .shapeImage {
+    width: 100%;
+    padding-top: calc(100% - 5px);
+    /* 根据需要调整此值 */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
+
+.shapeItem span {
+
+    display: block;
+    text-align: center;
+    padding: 5px 0;
+    /* 根据需要添加内边距 */
+}
+
 
 
 .tool::before {
@@ -647,9 +663,36 @@ footer {
     background-position: center;
 }
 
-#destroy {
-    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\destroy.png);
+#loop {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\Loop.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+}
+
+#alt {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\Alt.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#opt {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\Opt.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#class {
+    background-image: url(C:\Users\User\Desktop\Lab\myUML\myuml-main\src\icon\class.png);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.dashed-border {
+    stroke-dasharray: 4, 4;
+    stroke: black;
+
 }
