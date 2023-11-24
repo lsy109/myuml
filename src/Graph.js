@@ -32,6 +32,7 @@ class Graph extends React.Component {
             dragLine: null,
             dragRect: [],
             onclickElement: null,
+            groupNum: 0,
 
         };
 
@@ -652,7 +653,7 @@ class Graph extends React.Component {
         this.linkRectLineAndRect();
         this.interval1 = setInterval(() => {
             this.drawRect();
-            this.test(container)
+            this.test(container);
             clearInterval(this.interval1);
         }, 1);
 
@@ -660,23 +661,46 @@ class Graph extends React.Component {
 
     }
 
-    createGroup = (selection_1, selection_2, gropusId) => {
+    createGroupNum = () => {
+        this.setState(prevState => ({
+            groupNum: prevState.groupNum + 1
+        }));
+        return this.state.groupNum;
+    }
+
+
+    createGroup = (rect1, rect2, Line, container) => {
+        const svg = container
+        const rectOne = rect1;
+        const recttwo = rect2;
+        const rectLine = Line;
+
+        const num = this.createGroupNum();
+        const group = svg.append('g').attr('id', `nodesGroup_${num}`)
+        group.node().append(rect1);
+        group.node().append(rect2);
+        group.node().append(Line);
+        console.log(group.nodes())
 
 
     }
 
     linkRectLineAndRect = () => {
         const container = (d3.select(this.containerRef.current)).select('svg');
-        const rectLines = container.selectAll("[type='rectLine']").nodes()
+        const rectLines = container.selectAll("[type='rectLine']").nodes();
         const rectNodes = container.selectAll("rect[type='node']").nodes();
+        console.log(rectLines)
+        console.log(rectNodes)
 
         for (var i = 0; i < rectLines.length; i++) {
             const line = rectLines[i].getAttribute("id")
             let rect1 = rectNodes[i * 2];
             let rect2 = rectNodes[i * 2 + 1];
-            console.log(d3_select(rect1))
+            console.log(d3_select(rect1).node())
             d3_select(rect1).attr("Line", `${line}`)
             d3_select(rect2).attr("Line", `${line}`)
+
+            this.createGroup(rect1, rect2, line, container);
 
         }
 
