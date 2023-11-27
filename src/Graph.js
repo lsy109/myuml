@@ -33,6 +33,8 @@ class Graph extends React.Component {
             dragRect: [],
             onclickElement: null,
             groupNum: 0,
+            ifElse: false,
+            ifElseText: "",
 
         };
 
@@ -155,11 +157,13 @@ class Graph extends React.Component {
         const allElements = container.selectAll('*');
         console.log(allElements.nodes());
         const nodes = allElements.nodes();
+        const EditorText = this.props.EditorText;
         let num = 1;
         for (var i = 3; i < nodes.length; i += num) {
             const node = nodes[i];
-            // console.log(node)
             if (node.nodeName.toLowerCase() === "line") {
+                //自己指向自己的箭頭
+
                 try {
                     if (node.getAttribute('style') === "stroke:#181818;stroke-width:0.5;stroke-dasharray:5.0,5.0;") {
                         num = 1
@@ -293,6 +297,44 @@ class Graph extends React.Component {
 
 
                         }
+                        else if ((nodes[i].nodeName.toLowerCase() === "line" && nodes[i + 1].nodeName.toLowerCase() === "line" && nodes[i + 2].nodeName.toLowerCase() === "line" && nodes[i + 3].nodeName.toLowerCase() === "polygon")) {
+                            const numNode = this.nodeType()
+
+                            if ((nodes[i].nodeName.toLowerCase() === "line" && nodes[i + 1].nodeName.toLowerCase() === "line" && nodes[i + 2].nodeName.toLowerCase() === "line" && nodes[i + 3].nodeName.toLowerCase() === "polygon" && nodes[i + 4].nodeName.toLowerCase() === "text")) {
+                                num = 5;
+                                d3_select(nodes[i])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 1])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 2])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 3])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 4])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+
+                            } else {
+
+                                num = 4
+                                d3_select(nodes[i])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 1])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 2])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                                d3_select(nodes[i + 3])
+                                    .attr("id", `selfToself_${numNode}`)
+                                    .attr("type", "selfToself")
+                            }
+                        }
                         else if (nodes[i].nodeName.toLowerCase() === "line" && nodes[i + 1].nodeName.toLowerCase() === "text") {
                             const numNode = this.nodeType()
                             if (nodes[i + 1].innerHTML.replace(/\s/g, '').includes('[') && nodes[i + 1].innerHTML.replace(/\s/g, '').includes(']')) {
@@ -309,12 +351,12 @@ class Graph extends React.Component {
 
                     }
                 } catch (error) {
-
+                    console.log(error)
                 }
 
             }
 
-
+            //node
             if (node.nodeName.toLowerCase() === "rect") {
                 const numNode = this.nodeType()
                 num = 2
@@ -370,6 +412,7 @@ class Graph extends React.Component {
 
 
                         } else {
+
                             d3_select(nodes[i])
                                 .attr("id", `node_${numNode}`)
                                 .attr("type", "node")
@@ -378,6 +421,8 @@ class Graph extends React.Component {
                                 .attr("id", `node_${numNode}`)
                                 .attr("type", "node");
                         }
+
+
 
                     }
                     else {
@@ -392,8 +437,9 @@ class Graph extends React.Component {
                         .attr("type", "altRect");
                 }
             }
+            //普通箭頭
+            if (nodes[i].nodeName.toLowerCase() === "polygon") {
 
-            if (node.nodeName.toLowerCase() === "polygon") {
                 try {
                     const numNode = this.nodeType()
                     if (nodes[i + 1].nextSibling.nodeName.toLowerCase() === "text") {
@@ -525,109 +571,118 @@ class Graph extends React.Component {
 
 
             }
+
+            //特殊node
             if (node.nodeName.toLowerCase() === "text") {
 
                 const numNode = this.nodeType()
 
-                if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "path") {
-                    num = 3
-                    d3_select(nodes[i])
-                        .attr("id", `actor_${numNode}`)
-                        .attr("type", "Actor")
+                try {
+                    if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "path") {
 
-                    d3_select(nodes[i + 1])
-                        .attr("id", `actor_${numNode}`)
-                        .attr("type", "Actor")
-
-                    d3_select(nodes[i + 2])
-                        .attr("id", `actor_${numNode}`)
-                        .attr("type", "Actor")
-                }
-
-                else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "path" & nodes[i + 2].nodeName.toLowerCase() === "ellipse") {
-                    num = 3
-                    d3_select(nodes[i])
-                        .attr("id", `boundary_${numNode}`)
-                        .attr("type", "Boundary")
-
-                    d3_select(nodes[i + 1])
-                        .attr("id", `boundary_${numNode}`)
-                        .attr("type", "Boundary")
-
-                    d3_select(nodes[i + 2])
-                        .attr("id", `boundary_${numNode}`)
-                        .attr("type", "Boundary")
-
-                } else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "polygon") {
-                    num = 3
-                    d3_select(nodes[i])
-                        .attr("id", `control_${numNode}`)
-                        .attr("type", "Control")
-
-                    d3_select(nodes[i + 1])
-                        .attr("id", `control_${numNode}`)
-                        .attr("type", "Control")
-
-                    d3_select(nodes[i + 2])
-                        .attr("id", `control_${numNode}`)
-                        .attr("type", "Control")
-
-                }
-                else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "line") {
-                    num = 3
-                    d3_select(nodes[i])
-                        .attr("id", `entity_${numNode}`)
-                        .attr("type", "Entity")
-
-                    d3_select(nodes[i + 1])
-                        .attr("id", `entity_${numNode}`)
-                        .attr("type", "Entity")
-
-                    d3_select(nodes[i + 2])
-                        .attr("id", `entity_${numNode}`)
-                        .attr("type", "Entity")
-
-                } else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "path" & nodes[i + 2].nodeName.toLowerCase() === "path") {
-                    num = 3
-                    d3_select(nodes[i])
-                        .attr("id", `database_${numNode}`)
-                        .attr("type", "Database")
-
-                    d3_select(nodes[i + 1])
-                        .attr("id", `database_${numNode}`)
-                        .attr("type", "Database")
-
-                    d3_select(nodes[i + 2])
-                        .attr("id", `database_${numNode}`)
-                        .attr("type", "Database")
-
-                }
-
-                else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "line") {
-                    num = 3
-                    d3_select(nodes[i])
-                        .attr("id", `queue_${numNode}`)
-                        .attr("type", "Queue")
-
-                    d3_select(nodes[i + 1])
-                        .attr("id", `queue_${numNode}`)
-                        .attr("type", "Queue")
-
-                    d3_select(nodes[i + 2])
-                        .attr("id", `queue_${numNode}`)
-                        .attr("type", "Queue")
-
-                }
-                else {
-
-                    if (nodes[i].innerHTML.replace(/\s/g, '').includes('[') && nodes[i].innerHTML.replace(/\s/g, '').includes(']')) {
-                        num = 1
+                        num = 3
                         d3_select(nodes[i])
-                            .attr("id", `altText_${numNode}`)
-                            .attr("type", "altText")
+                            .attr("id", `actor_${numNode}`)
+                            .attr("type", "Actor")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `actor_${numNode}`)
+                            .attr("type", "Actor")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `actor_${numNode}`)
+                            .attr("type", "Actor")
+                    }
+
+
+                    else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "path" & nodes[i + 2].nodeName.toLowerCase() === "ellipse") {
+                        num = 3
+                        d3_select(nodes[i])
+                            .attr("id", `boundary_${numNode}`)
+                            .attr("type", "Boundary")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `boundary_${numNode}`)
+                            .attr("type", "Boundary")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `boundary_${numNode}`)
+                            .attr("type", "Boundary")
+
+                    } else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "polygon") {
+                        num = 3
+                        d3_select(nodes[i])
+                            .attr("id", `control_${numNode}`)
+                            .attr("type", "Control")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `control_${numNode}`)
+                            .attr("type", "Control")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `control_${numNode}`)
+                            .attr("type", "Control")
+
+                    }
+                    else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "line") {
+                        num = 3
+                        d3_select(nodes[i])
+                            .attr("id", `entity_${numNode}`)
+                            .attr("type", "Entity")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `entity_${numNode}`)
+                            .attr("type", "Entity")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `entity_${numNode}`)
+                            .attr("type", "Entity")
+
+                    } else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "path" & nodes[i + 2].nodeName.toLowerCase() === "path") {
+                        num = 3
+                        d3_select(nodes[i])
+                            .attr("id", `database_${numNode}`)
+                            .attr("type", "Database")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `database_${numNode}`)
+                            .attr("type", "Database")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `database_${numNode}`)
+                            .attr("type", "Database")
 
                     }
 
+                    else if (nodes[i].nodeName.toLowerCase() === "text" & nodes[i + 1].nodeName.toLowerCase() === "ellipse" & nodes[i + 2].nodeName.toLowerCase() === "line") {
+                        num = 3
+                        d3_select(nodes[i])
+                            .attr("id", `queue_${numNode}`)
+                            .attr("type", "Queue")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `queue_${numNode}`)
+                            .attr("type", "Queue")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `queue_${numNode}`)
+                            .attr("type", "Queue")
+
+                    }
+                    else {
+
+                        if (nodes[i].innerHTML.replace(/\s/g, '').includes('[') && nodes[i].innerHTML.replace(/\s/g, '').includes(']')) {
+                            num = 1
+                            d3_select(nodes[i])
+                                .attr("id", `altText_${numNode}`)
+                                .attr("type", "altText")
+
+                        }
+
+                    }
+
+                } catch (error) {
+                    console.log(error)
                 }
 
 
@@ -636,19 +691,128 @@ class Graph extends React.Component {
             }
             else if (nodes[i].nodeName.toLowerCase() === "path" && nodes[i + 1].nodeName.toLowerCase() === "rect" && nodes[i + 2].nodeName.toLowerCase() === "text") {
                 const numNode = this.nodeType()
-                num = 3
-                d3_select(nodes[i])
-                    .attr("id", `altesle_${numNode}`)
-                    .attr("type", "IfElse")
+                console.log(nodes[i + 2].textContent)
+                if (nodes[i + 2].textContent === "loop") {
+                    num = 3
+                    d3_select(nodes[i])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Loop")
 
-                d3_select(nodes[i + 1])
-                    .attr("id", `altesle_${numNode}`)
-                    .attr("type", "IfElse")
+                    d3_select(nodes[i + 1])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Loop")
 
-                d3_select(nodes[i + 2])
-                    .attr("id", `altesle_${numNode}`)
-                    .attr("type", "IfElse")
+                    d3_select(nodes[i + 2])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Loop")
+                }
+                else if (nodes[i + 2].textContent === "alt") {
+                    num = 3
+                    d3_select(nodes[i])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Alt")
+
+                    d3_select(nodes[i + 1])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Alt")
+
+                    d3_select(nodes[i + 2])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Alt")
+                }
+                else if (nodes[i + 2].textContent === "opt") {
+                    num = 3
+                    d3_select(nodes[i])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Opt")
+
+                    d3_select(nodes[i + 1])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Opt")
+
+                    d3_select(nodes[i + 2])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "Opt")
+                }
+                else {
+                    num = 3
+                    d3_select(nodes[i])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "IfElse")
+
+                    d3_select(nodes[i + 1])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "IfElse")
+
+                    d3_select(nodes[i + 2])
+                        .attr("id", `altesle_${numNode}`)
+                        .attr("type", "IfElse")
+                }
+
             }
+
+            else if (nodes[i].nodeName.toLowerCase() === "path" && nodes[i + 1].nodeName.toLowerCase() === "path" && nodes[i + 2].nodeName.toLowerCase() === "text") {
+                const numNode = this.nodeType();
+
+
+                if (nodes[i + 3].nodeName.toLowerCase() === "text") {
+                    const Text = EditorText.split("\n")
+                    const nodeIndex = Text.findIndex(line => line.includes("a note"));
+                    const endNodeIndex = Text.findIndex(line => line.includes("end note"));
+
+                    if (nodeIndex !== -1 && endNodeIndex !== -1 && endNodeIndex > nodeIndex) {
+                        // 計算 "a note" 和 "end note" 之間的元素數量
+                        const str = endNodeIndex - nodeIndex;
+
+                        console.log(str);
+                        num = str + 3;
+
+                        d3_select(nodes[i])
+                            .attr("id", `note_${numNode}`)
+                            .attr("type", "note")
+
+                        d3_select(nodes[i + 1])
+                            .attr("id", `note_${numNode}`)
+                            .attr("type", "note")
+
+                        d3_select(nodes[i + 2])
+                            .attr("id", `note_${numNode}`)
+                            .attr("type", "note")
+
+                        // 處理 "a note" 和 "end note" 之間的每個元素
+                        for (var j = 0; j < str; j++) {
+                            console.log("??")
+                            d3_select(nodes[i + j + 3])  // 確保選擇正確的節點
+                                .attr("id", `note_${numNode}`)
+                                .attr("type", "note");
+                        }
+                    } else {
+                        // "a note" 和 "end note" 沒有找到或者它們的順序不正確
+                        console.log("未找到或順序不正確");
+                    }
+
+
+
+                } else {
+
+                    num = 3;
+                    d3_select(nodes[i])
+                        .attr("id", `note_${numNode}`)
+                        .attr("type", "note")
+
+                    d3_select(nodes[i + 1])
+                        .attr("id", `note_${numNode}`)
+                        .attr("type", "note")
+
+                    d3_select(nodes[i + 2])
+                        .attr("id", `note_${numNode}`)
+                        .attr("type", "note")
+                }
+
+
+            }
+
+
         }
         this.linkRectLineAndRect();
         this.interval1 = setInterval(() => {
@@ -669,21 +833,7 @@ class Graph extends React.Component {
     }
 
 
-    createGroup = (rect1, rect2, Line, container) => {
-        const svg = container
-        const rectOne = rect1;
-        const recttwo = rect2;
-        const rectLine = Line;
 
-        const num = this.createGroupNum();
-        const group = svg.append('g').attr('id', `nodesGroup_${num}`)
-        group.node().append(rect1);
-        group.node().append(rect2);
-        group.node().append(Line);
-        console.log(group.nodes())
-
-
-    }
 
     linkRectLineAndRect = () => {
         const container = (d3.select(this.containerRef.current)).select('svg');
@@ -709,6 +859,28 @@ class Graph extends React.Component {
 
     }
 
+    createGroup = (rect1, rect2, Line, container) => {
+        const svg = d3.select(container);
+        const rectOne = rect1;
+        const recttwo = rect2;
+        const rectLine = Line;
+
+        const num = this.createGroupNum();
+        // const group = svg.append('g')
+        //     .attr('id', `nodesGroup_${num}`)
+        //     .attr('type', 'myGroup');
+
+        // rect1.each(function () { group.node().appendChild(this); });
+        // rect2.each(function () { group.node().appendChild(this); });
+        // Line.each(function () { group.node().appendChild(this); });
+
+
+        // const myGroups = d3.selectAll("g[type='myGroup']");
+        // console.log(myGroups)
+
+
+
+    }
     drawRectLine = (rectLines, container) => {
         for (var i = 0; i < rectLines.length; i++) {
             let line = rectLines[i];
@@ -749,14 +921,17 @@ class Graph extends React.Component {
         container.selectAll("text").on("dblclick", this.textHandleDoubleClick.bind(this));
         // container.selectAll("line").on("dblclick", this.handleLineClick.bind(this))
         // container.selectAll("polygon").on("dblclick", this.handleLineClick.bind(this));
-
-
+        container.selectAll('[type="Loop"]').on("dblclick", this.ifelsepDbClick.bind(this));
+        container.selectAll('[type="Alt"]').on("dblclick", this.ifelsepDbClick.bind(this));
+        container.selectAll('[type="Opt"]').on("dblclick", this.ifelsepDbClick.bind(this));
         //單擊
         container.selectAll("line").on("contextmenu", this.contextMenu.bind(this));
         // container.selectAll("text").on("click", this.handleLeftClick.bind(this));
         container.on("click", this.resetAllBoolean.bind(this));
         container.selectAll("svg").on("wheel", this.mouseWheel.bind(this));
         container.selectAll("*").on("click", this.DomLine);
+
+
         // container.select("svg").on("click", function (event) {
         //     console.log(event)
         //     var coordinates = d3.pointer(event);
@@ -1782,7 +1957,10 @@ class Graph extends React.Component {
 
             if (event.target.value === "") {
                 console.log("kongkong");
+            } else if (this.state.ifElse) {
+                this.props.IfElsefunction(this.state.ifElseText, ` ${event.target.value}`, 1)
             } else {
+
                 this.sendDataToParent(event)
 
 
@@ -1792,7 +1970,9 @@ class Graph extends React.Component {
     }
     //
     sendDataToParent = (event) => {
-        console.log(event.target.value)
+        console.log(event.target)
+
+
         if (this.state.doubleClickNode1 != null && this.state.doubleClickNode2 != null) {
 
             this.state.doubleClickNode1.text(event.target.value);
@@ -2002,48 +2182,48 @@ end`
     /////////////////////////////////////////////////////////////////////////
 
     //偵測鼠標的位置
-    whereMouse = (lines, x, y, rects) => {
+    // whereMouse = (lines, x, y, rects) => {
 
-        for (var i = 0; i < lines.length; i += 2) {
-            let line1 = parseFloat(lines[i].getAttribute('x1'));
-            let line2 = parseFloat(lines[i + 1].getAttribute('x1'));
-            let line3 = parseFloat(lines[i].getAttribute('y1'));
-            let line4 = parseFloat(lines[i].getAttribute('y2'));
-
-
+    //     for (var i = 0; i < lines.length; i += 2) {
+    //         let line1 = parseFloat(lines[i].getAttribute('x1'));
+    //         let line2 = parseFloat(lines[i + 1].getAttribute('x1'));
+    //         let line3 = parseFloat(lines[i].getAttribute('y1'));
+    //         let line4 = parseFloat(lines[i].getAttribute('y2'));
 
 
-            if (x > line1 && x < line2 && y > line3 && y < line4) {
 
 
-                let rect1;
-                let rect2;
-                for (var j = 0; j < rects.length; j += 4) {
-                    let ret1 = parseFloat(rects[j].getAttribute('x'));
-                    let ret2 = parseFloat(rects[j + 1].getAttribute('x'));
-                    let ret3 = parseFloat(rects[j + 2].getAttribute('x'));
-                    let ret4 = parseFloat(rects[j + 3].getAttribute('x'));
+    //         if (x > line1 && x < line2 && y > line3 && y < line4) {
 
 
-                    if (line1 > ret1 && line2 > ret3) {
-                        // console.log("dd")
-                        // console.log(line1, line2)
-                        // console.log(ret1, ret2, ret3, ret4)
-                    }
+    //             let rect1;
+    //             let rect2;
+    //             for (var j = 0; j < rects.length; j += 4) {
+    //                 let ret1 = parseFloat(rects[j].getAttribute('x'));
+    //                 let ret2 = parseFloat(rects[j + 1].getAttribute('x'));
+    //                 let ret3 = parseFloat(rects[j + 2].getAttribute('x'));
+    //                 let ret4 = parseFloat(rects[j + 3].getAttribute('x'));
 
 
-                }
-                // for (var j = 0; j < rects.length; j += 2) {
-                //     console.log(j)
-                //     let rect1 = rects[j].getAttribute('x');
-                //     let rect2 = rects[j + 1].getAttribute('x');
-                //     console.log(rect1, rect2)
-                // }
+    //                 if (line1 > ret1 && line2 > ret3) {
+    //                     // console.log("dd")
+    //                     // console.log(line1, line2)
+    //                     // console.log(ret1, ret2, ret3, ret4)
+    //                 }
 
-            }
 
-        }
-    }
+    //             }
+    //             // for (var j = 0; j < rects.length; j += 2) {
+    //             //     console.log(j)
+    //             //     let rect1 = rects[j].getAttribute('x');
+    //             //     let rect2 = rects[j + 1].getAttribute('x');
+    //             //     console.log(rect1, rect2)
+    //             // }
+
+    //         }
+
+    //     }
+    // }
 
     //偵測元素的位置
     drawRect = () => {
@@ -2097,102 +2277,145 @@ end`
 
     }
 
-
+    addResizeHandles(clickedElement, bbox) {
+        // ...（此处是之前提供的 addResizeHandles 函数的代码）
+    }
+    removeResizeHandles = () => {
+        d3.selectAll('.resize-handle').remove();
+    };
 
     //為元素添加虛綫框
     DomLine = (event) => {
         event.stopPropagation();
         const clickedElement = d3.select(event.currentTarget);
-
-        // 检查是否为 text 元素
-        if (clickedElement.node().tagName === 'text') {
-            return; // 如果是 text 元素，则不进行任何操作
-        }
-        console.log(d3_selectAll(`#rectLine_1`).node())
-        const isHighlighted = clickedElement.classed('highlighted');
-
-
-        if (isHighlighted) {
-            // 如果元素已经被高亮，则移除高亮
-            clickedElement.classed('highlighted', false);
-            d3.select('#highlighted-border').remove();
-            this.setState({ onclickElement: null })
-        } else {
-            // 添加高亮
-            this.setState({ onclickElement: clickedElement })
-            clickedElement.classed('highlighted', true);
-
-            const bbox = clickedElement.node().getBBox();
-            const highlightRect = d3.select(clickedElement.node().parentNode)
-                .append('rect')
-                .attr('id', 'highlighted-border')
-                .attr('x', bbox.x - 2)
-                .attr('y', bbox.y - 2)
-                .attr('width', bbox.width + 4)
-                .attr('height', bbox.height + 4)
-                .style('fill', 'none')
-                .style('stroke', 'black')
-                .style('stroke-width', '2px')
-                .style('stroke-dasharray', '5,5')
-                .style('pointer-events', 'all') // 确保虚线框响应鼠标事件
-                .call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended));
-            this.LineMove(clickedElement, bbox);
-            function dragstarted(event) {
-                d3.select(this).raise(); // 提升层级以便拖拽
+        try {
+            // 检查是否为 text 元素
+            if (clickedElement.node().tagName === 'text') {
+                return; // 如果是 text 元素，则不进行任何操作
             }
+            console.log(d3_selectAll(`#rectLine_1`).node())
+            const isHighlighted = clickedElement.classed('highlighted');
 
-            function dragged(event, d) {
-                // 检查d是否定义，并为其提供一个默认值
-                d = d || { x: 0, y: 0 }; // 如果d是undefined，使用默认值
 
-                const dx = event.dx;
-                const dy = event.dy;
-                const transform = d.transform || { x: 0, y: 0 }; // 再次检查transform属性
-                transform.x += dx;
-                transform.y += dy;
-
-                // 更新元素的transform属性
-                clickedElement.attr("transform", `translate(${transform.x},${transform.y})`);
-
-                // 更新虚线框的位置
-                d3.select(this).attr("x", parseFloat(d3.select(this).attr("x")) + dx)
-                    .attr("y", parseFloat(d3.select(this).attr("y")) + dy);
-            }
-            function removeHighlight() {
-                d3.selectAll('.highlighted').classed('highlighted', false);
+            if (isHighlighted) {
+                // 如果元素已经被高亮，则移除高亮
+                clickedElement.classed('highlighted', false);
                 d3.select('#highlighted-border').remove();
+                d3.selectAll('.resize-handle').remove();
                 this.setState({ onclickElement: null })
+
+            } else {
+                // 添加高亮
+                this.setState({ onclickElement: clickedElement })
+                clickedElement.classed('highlighted', true);
+
+                const bbox = clickedElement.node().getBBox();
+                const highlightRect = d3.select(clickedElement.node().parentNode)
+                    .append('rect')
+                    .attr('id', 'highlighted-border')
+                    .attr('x', bbox.x - 2)
+                    .attr('y', bbox.y - 2)
+                    .attr('width', bbox.width + 4)
+                    .attr('height', bbox.height + 4)
+                    .style('fill', 'none')
+                    .style('stroke', 'black')
+                    .style('stroke-width', '2px')
+                    .style('stroke-dasharray', '5,5')
+                    .style('pointer-events', 'all') // 确保虚线框响应鼠标事件
+                    .call(d3.drag()
+                        .on("start", dragstarted)
+                        .on("drag", dragged)
+                        .on("end", dragended));
+
+
+
+                const handleSize = 5; // 控制点的大小
+                const handleRadius = handleSize / 2; // 控制点的半径
+
+                // 确保控制点的中心位于边界框的角上
+                const corners = [
+                    { x: bbox.x - handleRadius - 1, y: bbox.y - handleRadius - 1, cursor: 'nwse-resize' }, // 左上角
+                    { x: bbox.x + bbox.width - handleRadius + 1, y: bbox.y - handleRadius - 1, cursor: 'nesw-resize' }, // 右上角
+                    { x: bbox.x - handleRadius - 1, y: bbox.y + bbox.height - handleRadius + 1, cursor: 'nesw-resize' }, // 左下角
+                    { x: bbox.x + bbox.width - handleRadius + 1, y: bbox.y + bbox.height - handleRadius + 1, cursor: 'nwse-resize' } // 右下角
+                ];
+
+                corners.forEach((corner, index) => {
+                    d3.select(clickedElement.node().parentNode)
+                        .append('circle')
+                        .attr('cx', corner.x + handleRadius) // 加上半径以定位中心
+                        .attr('cy', corner.y + handleRadius)
+                        .attr('r', handleRadius)
+                        .style('opacity', 0)
+                        .attr('class', `resize-handle resize-handle-${index}`)
+                        .style('cursor', corner.cursor) // 使用指定的光标样式
+                        .call(d3.drag()
+                            // 这里可以添加拖拽事件处理
+                            // ...
+                        );
+                });
+
+                this.LineMove(clickedElement, bbox);
+                function dragstarted(event) {
+                    d3.select(this).raise(); // 提升层级以便拖拽
+                }
+
+                function dragged(event, d) {
+                    // 检查d是否定义，并为其提供一个默认值
+                    d = d || { x: 0, y: 0 }; // 如果d是undefined，使用默认值
+
+                    const dx = event.dx;
+                    const dy = event.dy;
+                    const transform = d.transform || { x: 0, y: 0 }; // 再次检查transform属性
+                    transform.x += dx;
+                    transform.y += dy;
+
+                    // 更新元素的transform属性
+                    clickedElement.attr("transform", `translate(${transform.x},${transform.y})`);
+
+                    // 更新虚线框的位置
+                    d3.select(this).attr("x", parseFloat(d3.select(this).attr("x")) + dx)
+                        .attr("y", parseFloat(d3.select(this).attr("y")) + dy);
+                }
+                function removeHighlight() {
+                    d3.selectAll('.highlighted').classed('highlighted', false);
+                    d3.select('#highlighted-border').remove();
+                    d3.selectAll('.resize-handle').remove();
+                    this.setState({ onclickElement: null })
+                }
+
+                function dragended(event) {
+                    const dragBox = d3.select('#highlighted-border');
+                    const boxX = parseFloat(dragBox.attr('x'));
+                    const boxY = parseFloat(dragBox.attr('y'));
+                    const boxWidth = parseFloat(dragBox.attr('width'));
+                    const boxHeight = parseFloat(dragBox.attr('height'));
+
+                    // const elementsInside = d3.select('svg').selectAll('*').filter(function () {
+                    //     // 排除 rectLine 和 node 类型的元素
+                    //     if (this.classList.contains('rectLine') || this.classList.contains('node') || this.classList.contains('altRect') || this.classList.contains('group')) {
+                    //         return false;
+                    //     }
+
+                    //     const bbox = this.getBBox();
+                    //     const insideX = bbox.x + bbox.width > boxX && bbox.x < boxX + boxWidth;
+                    //     const insideY = bbox.y + bbox.height > boxY && bbox.y < boxY + boxHeight;
+                    //     return insideX && insideY;
+                    // });
+
+                    // elementsInside.each(function (d, i) {
+                    //     console.log('框内符合条件的元素:', this);
+                    //     // 这里可以进行更多的操作
+                    // });
+                    removeHighlight();
+                }
+
             }
 
-            function dragended(event) {
-                const dragBox = d3.select('#highlighted-border');
-                const boxX = parseFloat(dragBox.attr('x'));
-                const boxY = parseFloat(dragBox.attr('y'));
-                const boxWidth = parseFloat(dragBox.attr('width'));
-                const boxHeight = parseFloat(dragBox.attr('height'));
+        } catch (error) {
 
-                // const elementsInside = d3.select('svg').selectAll('*').filter(function () {
-                //     // 排除 rectLine 和 node 类型的元素
-                //     if (this.classList.contains('rectLine') || this.classList.contains('node') || this.classList.contains('altRect') || this.classList.contains('group')) {
-                //         return false;
-                //     }
-
-                //     const bbox = this.getBBox();
-                //     const insideX = bbox.x + bbox.width > boxX && bbox.x < boxX + boxWidth;
-                //     const insideY = bbox.y + bbox.height > boxY && bbox.y < boxY + boxHeight;
-                //     return insideX && insideY;
-                // });
-
-                // elementsInside.each(function (d, i) {
-                //     console.log('框内符合条件的元素:', this);
-                //     // 这里可以进行更多的操作
-                // });
-                removeHighlight();
-            }
         }
+
     }
 
 
@@ -2254,8 +2477,10 @@ end`
             return d3.drag()
                 .on('drag', function (event) {
                     updateFunction(event.dx, event.dy);
-                });
+                })
+                .on('end', dragEnded);
         }
+
 
         // 为上边缘创建拖拽行为
         const dragTop = createDragBehavior(function (dx, dy) {
@@ -2291,11 +2516,16 @@ end`
             }
         });
 
+
+
         // 应用拖拽行为到四个边缘
+
         applyDragBehavior('top', dragTop);
         applyDragBehavior('bottom', dragBottom);
         applyDragBehavior('left', dragLeft);
         applyDragBehavior('right', dragRight);
+
+
 
         // 为边缘应用拖拽行为的函数
         function applyDragBehavior(edge, dragBehavior) {
@@ -2303,12 +2533,14 @@ end`
             let x = 0, y = 0, width = 0, height = 0, cursor = '';
 
             switch (edge) {
+
                 case 'top':
                     x = bbox.x;
                     y = bbox.y - edgeThickness / 2;
                     width = bbox.width;
                     height = edgeThickness;
                     cursor = 'ns-resize';
+                    console.log(x, y)
                     break;
                 case 'bottom':
                     x = bbox.x;
@@ -2331,17 +2563,21 @@ end`
                     height = bbox.height;
                     cursor = 'ew-resize';
                     break;
+
+
             }
 
+
             parent.append('rect')
-                .attr('className', 'drag-edge')
+                .attr('class', 'drag-edge') // 修改这里
                 .attr('x', x)
                 .attr('y', y)
                 .attr('width', width)
                 .attr('height', height)
                 .style('fill', 'transparent')
                 .style('cursor', cursor)
-                .call(dragBehavior.on('end', dragEnded));// 添加拖拽结束的事件处理器
+                .call(dragBehavior.on('end', dragEnded));
+
         }
         function removeHighlight() {
             d3.selectAll('.highlighted').classed('highlighted', false);
@@ -2350,7 +2586,45 @@ end`
             d3.selectAll('.drag-edge').remove();
         }
 
+        function createCornerDragBehavior(cornerIndex) {
+            return d3.drag()
+                .on('drag', function (event) {
+                    // 获取虚线框的新位置和尺寸
+                    const border = d3.select('#highlighted-border');
+                    let x = parseFloat(border.attr('x'));
+                    let y = parseFloat(border.attr('y'));
+                    let width = parseFloat(border.attr('width'));
+                    let height = parseFloat(border.attr('height'));
 
+                    // 根据拖动的角落圆点调整虚线框的位置和尺寸
+                    if (cornerIndex === 0) { // 左上角
+                        const newWidth = width - event.dx;
+                        const newHeight = height - event.dy;
+                        border.attr('x', x + event.dx).attr('y', y + event.dy)
+                            .attr('width', newWidth > 0 ? newWidth : 0)
+                            .attr('height', newHeight > 0 ? newHeight : 0);
+                    } else if (cornerIndex === 1) { // 右上角
+                        const newHeight = height - event.dy;
+                        border.attr('y', y + event.dy)
+                            .attr('width', width + event.dx)
+                            .attr('height', newHeight > 0 ? newHeight : 0);
+                    } else if (cornerIndex === 2) { // 左下角
+                        const newWidth = width - event.dx;
+                        border.attr('x', x + event.dx)
+                            .attr('width', newWidth > 0 ? newWidth : 0)
+                            .attr('height', height + event.dy);
+                    } else if (cornerIndex === 3) { // 右下角
+                        border.attr('width', width + event.dx)
+                            .attr('height', height + event.dy);
+                    }
+                })
+                .on('end', dragEnded);
+        }
+
+        // 为四个角落的圆点应用拖拽行为
+        d3.selectAll('.resize-handle').each(function (_, i) {
+            d3.select(this).call(createCornerDragBehavior(i));
+        });
 
 
     }
@@ -2365,8 +2639,14 @@ end`
             const id = this.id
             if (!nodesType.includes(id)) {
                 // 如果不存在，則添加到陣列中
+                console.log(id.includes('altRect_'))
                 if (!id.includes(`${selectElement}`)) {
-                    nodesType.push(id);
+                    if (id.includes('altRect_')) {
+
+                    } else {
+                        nodesType.push(id);
+                    }
+
                 }
 
             } else {
@@ -2376,6 +2656,16 @@ end`
         const clicknode = d3_selectAll(`#${selectElement}`).nodes().map(node => d3.select(node).text());
 
         const texts1 = [];
+        console.log(nodesType)
+        //判斷有多少個altrect
+        const altRect = d3_selectAll('[type="altRect"]').nodes();
+        const ifelse = d3.selectAll('[id^="altesle_"]').nodes();
+        console.log(altRect)
+        console.log(ifelse)
+
+        // const editorText = this.props.EditorText.split("\n");
+
+        //
         for (var i = 0; i < nodesType.length; i++) {
             const id = nodesType[i];
 
@@ -2387,6 +2677,13 @@ end`
 
                 texts1.push(test1);
                 // this.props.graphzhuehyuyan2(test1, test2, test3, clicknode[2])
+            } else if (id.includes("altesle")) {
+                const element = d3_selectAll(`#${id}`).nodes()
+                console.log(element)
+                const texts = element.map(node => d3.select(node).text());
+                console.log(texts)
+                const test1 = texts[2]
+                texts1.push(test1)
             }
 
 
@@ -2397,7 +2694,33 @@ end`
     }
 
 
+    ifelsepDbClick = (event) => {
 
+        const id = event.target.id
+        const element = d3_selectAll(`text[id="${id}"]`).node();
+        const text = element.getAttribute("type")
+        const x = event.offsetY;
+        const y = event.offsetX;
+        let text1 = "";
+
+        if (text === "Loop") {
+            // this.props.IfElsefunction("loop")
+            text1 = "loop"
+
+        } else if (text === "Alt") {
+            text1 = "alt"
+
+        } else if (text === "Opt") {
+            text1 = "opt"
+        }
+        this.setState({
+            inputPosition: { x, y },
+            textDoubleClick: true,
+            ifElse: true,
+            ifElseText: text1
+        });
+
+    }
 
 
 

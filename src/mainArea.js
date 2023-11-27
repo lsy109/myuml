@@ -89,6 +89,12 @@ class MainArea extends React.Component {
         this.setState({ selectedComponent: componentName });
     }
 
+    //處理ifelse框的function
+    getAltElse = (text1, text2, num) => {
+
+        this.ediRef.current.updateAndPrintContent(text1, text2, num)
+    }
+
 
     /////////
     //select改變畫面
@@ -134,7 +140,10 @@ ${str}
                     shapeText={this.getShapeText.bind(this)}
                     graphzhuehyuyan={this.zhuheyuyan.bind(this)}
                     graphzhuehyuyan2={this.zhuheyuyan2.bind(this)}
-                    data={this.state.dataFromTree} />;
+                    data={this.state.dataFromTree}
+                    EditorText={this.state.dotSrc}
+                    IfElsefunction={this.getAltElse.bind(this)}
+                />;
 
                 componentToRender1 = <TreeArea
                     onDataUpdate={this.handleDataFromTree}

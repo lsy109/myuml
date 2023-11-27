@@ -210,6 +210,37 @@ class Editor extends React.Component {
             this.aceRef.current.editor.setValue(newValue)
         }
     }
+    updateAndPrintContent = (text1, text2, num) => {
+        const editor = this.aceRef.current.editor;
+        const session = editor.getSession();
+        const lines = session.getDocument().getAllLines();
+        let matchCount = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(text1)) {
+                matchCount += 1;
+                if (matchCount === num) {
+                    session.getDocument().insert({
+                        row: i,
+                        column: lines[i].length
+                    }, text2);
+                    break;
+                }
+            }
+        }
+
+        // 獲取更改後的內容
+        const updatedContent = session.getValue();
+
+        // 如果需要對更新後的內容進行進一步處理，可以在這裡進行
+        // ...
+
+        // 將更新後的內容重新設置到Ace Editor
+        session.setValue(updatedContent);
+
+        console.log('更改並重新設置後的內容:', updatedContent);
+    }
+
 
 
 
