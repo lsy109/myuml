@@ -3,6 +3,7 @@ import { select as d3_select } from 'd3-selection';
 import { selectAll as d3_selectAll } from 'd3-selection';
 import 'd3-graphviz';
 import * as d3 from 'd3';
+import axios from 'axios';
 import shapeJson from "./shape.json"
 class Graph extends React.Component {
     constructor(props) {
@@ -48,7 +49,6 @@ class Graph extends React.Component {
     }
     componentDidMount() {
         this.fetchSvg(this.props.ImgUrl);
-
         // document.getElementById("editDiv").addEventListener('mouseClick', this.resetAllBoolean());
 
         //渲染時獲取editDiv的大小
@@ -105,6 +105,8 @@ class Graph extends React.Component {
         // this.setupDragBehavior();
 
     }
+
+
     inputImg = (imgUrl) => {
 
         this.fetchSvg(imgUrl)
@@ -142,6 +144,7 @@ class Graph extends React.Component {
             svgElement.attr("style", currentStyle);
             this.interval = setInterval(() => {
                 this.reMakeAllDom(container);
+                this.getDomInEditor(container);
                 this.setState({ nodeNum: 0 });
                 clearInterval(this.interval);
             }, 1);
@@ -691,7 +694,7 @@ class Graph extends React.Component {
             }
             else if (nodes[i].nodeName.toLowerCase() === "path" && nodes[i + 1].nodeName.toLowerCase() === "rect" && nodes[i + 2].nodeName.toLowerCase() === "text") {
                 const numNode = this.nodeType()
-                console.log(nodes[i + 2].textContent)
+
                 if (nodes[i + 2].textContent === "loop") {
                     num = 3
                     d3_select(nodes[i])
@@ -824,7 +827,21 @@ class Graph extends React.Component {
 
 
     }
+    getDomInEditor = (container) => {
+        let container1 = container;
+        let Dom = container.selectAll('*').nodes();
+        let allDomId = [];
+        for (var i = 0; i < Dom.length; i++) {
+            const id = Dom[i].id;
+            if (allDomId.includes(id)) {
 
+            } else {
+                allDomId.push(id)
+            }
+
+        }
+
+    }
     createGroupNum = () => {
         this.setState(prevState => ({
             groupNum: prevState.groupNum + 1
@@ -1969,25 +1986,7 @@ class Graph extends React.Component {
         }
     }
     //
-    sendDataToParent = (event) => {
-        console.log(event.target)
 
-
-        if (this.state.doubleClickNode1 != null && this.state.doubleClickNode2 != null) {
-
-            this.state.doubleClickNode1.text(event.target.value);
-            this.state.doubleClickNode2.text(event.target.value);
-            this.setState({
-                inputext: event.target.value
-            })
-        } else {
-            this.state.doubleClickNode1.text(event.target.value);
-            this.setState({
-                inputext: event.target.value
-            })
-
-        }
-    }
     handleMenuItemClick = (e, data) => {
         console.log(data.foo); // 這裡會印出 "example"
     }
@@ -2361,6 +2360,8 @@ end`
                 }
 
                 function dragged(event, d) {
+
+
                     // 检查d是否定义，并为其提供一个默认值
                     d = d || { x: 0, y: 0 }; // 如果d是undefined，使用默认值
 
@@ -2391,22 +2392,7 @@ end`
                     const boxWidth = parseFloat(dragBox.attr('width'));
                     const boxHeight = parseFloat(dragBox.attr('height'));
 
-                    // const elementsInside = d3.select('svg').selectAll('*').filter(function () {
-                    //     // 排除 rectLine 和 node 类型的元素
-                    //     if (this.classList.contains('rectLine') || this.classList.contains('node') || this.classList.contains('altRect') || this.classList.contains('group')) {
-                    //         return false;
-                    //     }
 
-                    //     const bbox = this.getBBox();
-                    //     const insideX = bbox.x + bbox.width > boxX && bbox.x < boxX + boxWidth;
-                    //     const insideY = bbox.y + bbox.height > boxY && bbox.y < boxY + boxHeight;
-                    //     return insideX && insideY;
-                    // });
-
-                    // elementsInside.each(function (d, i) {
-                    //     console.log('框内符合条件的元素:', this);
-                    //     // 这里可以进行更多的操作
-                    // });
                     removeHighlight();
                 }
 
@@ -2415,6 +2401,11 @@ end`
         } catch (error) {
 
         }
+
+    }
+
+    makeLine = () => {
+        console.log("pp")
 
     }
 
@@ -2629,10 +2620,10 @@ end`
 
     }
 
+
     nodesName = (nodes) => {
         const element = nodes;
         const selectElement = this.state.onclickElement.node().id
-        console.log(selectElement)
         const nodesType = [];
 
         element.each(function () {
@@ -2653,44 +2644,114 @@ end`
 
             }
         });
+        //點擊的元素
         const clicknode = d3_selectAll(`#${selectElement}`).nodes().map(node => d3.select(node).text());
-
         const texts1 = [];
-        console.log(nodesType)
+
         //判斷有多少個altrect
         const altRect = d3_selectAll('[type="altRect"]').nodes();
         const ifelse = d3.selectAll('[id^="altesle_"]').nodes();
         console.log(altRect)
         console.log(ifelse)
 
-        // const editorText = this.props.EditorText.split("\n");
 
+        const editorText = this.props.EditorText.split("\n");
+        this.EditorTextNode(selectElement, nodesType, editorText)
+        // for (var i = 0; i < nodesType.length; i++) {
+        //     const id = nodesType[i];
+        //     console.log(id)
+        //     if (id.includes("edge")) {
+        //         const element = d3_selectAll(`#${id}`).nodes()
+        //         const texts = element.map(node => d3.select(node).text());
+        //         console.log(texts)
+        //         const test1 = texts[2]
+
+        //         texts1.push(test1);
+        //         // this.props.graphzhuehyuyan2(test1, test2, test3, clicknode[2])
+        //     } else if (id.includes("altesle")) {
+        //         const element = d3_selectAll(`#${id}`).nodes()
+        //         console.log(element)
+        //         const texts = element.map(node => d3.select(node).text());
+        //         console.log(texts)
+        //         const test1 = texts[2]
+        //         texts1.push(test1)
+        //     }
+
+
+
+        // }
+        // this.props.graphzhuehyuyan2(texts1, clicknode[2])
+        // console.log(texts1)
+    }
+    // fetchParsedData = async (data) => {
+    //     try {
+    //         const requestData = data;
+
+    //         // 使用axios发送异步POST请求
+    //         const response = await axios.post('http://localhost:3000/parse-plantuml', requestData, {
+    //             headers: {
+    //                 'Content-Type': 'text/plain'
+    //             }
+    //         });
+
+    //         console.log({ result: response.data });
+    //     } catch (error) {
+    //         console.log({ error });
+    //     }
+    // }
+
+
+    //判斷框内的元素要如何定義
+    //點擊的元素，框内的元素，editor字串
+    EditorTextNode = (clicknode, nodesType, editorText) => {
+        let text = editorText;
+        let ifElse = ["loop", "alt", "opt"];
+        let end = ["end"];
+        //判斷有多少個ifelse
+        let totalCount = ifElse.reduce((count, targetString) => {
+            return count + text.filter(item => item === targetString).length;
+        }, 0);
+        let totalCount1 = end.reduce((count, targetString) => {
+            return count + text.filter(item => item === targetString).length;
+        }, 0);
         //
+        //////
+        //判斷我點擊的是第幾個
+        const ifelse = d3.selectAll('text[id^="altesle_"]').nodes();
+        //這是我點擊的元素的index
+        const index = ifelse.findIndex(element => element.id === clicknode);
+        //
+        const Dom = ifelse[index].textContent;
+        console.log(Dom)
+        console.log(index)
+        console.log(clicknode)
+        console.log(editorText)
+        console.log(nodesType)
+        //判斷editorText要如何變更
+        const edittext = editorText;
+        const num = 0;
+        let edgecount = [];
+        //判斷edge在text中的位置
         for (var i = 0; i < nodesType.length; i++) {
-            const id = nodesType[i];
+            let id = nodesType[i];
 
-            if (id.includes("edge")) {
-                const element = d3_selectAll(`#${id}`).nodes()
-                const texts = element.map(node => d3.select(node).text());
-                console.log(texts)
-                const test1 = texts[2]
-
-                texts1.push(test1);
-                // this.props.graphzhuehyuyan2(test1, test2, test3, clicknode[2])
-            } else if (id.includes("altesle")) {
-                const element = d3_selectAll(`#${id}`).nodes()
-                console.log(element)
-                const texts = element.map(node => d3.select(node).text());
-                console.log(texts)
-                const test1 = texts[2]
-                texts1.push(test1)
+            if (id.includes("edge_")) {
+                let Dom = d3.selectAll('polygon[id^="edge_"]').nodes();
+                const index = Dom.findIndex(element => element.id === id) + 1;
+                edgecount.push(index)
             }
-
-
-
         }
-        this.props.graphzhuehyuyan2(texts1, clicknode[2])
-        console.log(texts1)
+        console.log(edgecount)
+
+
+
+    }
+
+
+    //根據框住的元素判斷Editor要怎麽寫
+    //editor字串，位置，元素
+    reWriteEditorText = (text, num, node) => {
+
     }
 
 
