@@ -1,7 +1,7 @@
 import React from 'react';
 import Menu from '../Menu.js';
 import Container from '../Container.js';
-import RightClickMenu from '../RightClickMenu.js';
+
 
 class Index extends React.Component {
     render() {

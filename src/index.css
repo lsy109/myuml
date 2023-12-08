@@ -158,6 +158,12 @@ li a:hover {
     font-size: 18px;
 }
 
+.DownloadBtn {
+    margin-right: 5px;
+    margin-top: 5px;
+    font-size: 18px;
+}
+
 #container {
     position: relative;
     width: 98%;
@@ -379,14 +385,14 @@ li {
     user-select: none;
 } */
 
-#shape {
+/* #shape {
     position: relative;
     border: 1px solid;
     border-radius: 10px;
     margin: 3px 10px;
     height: calc(100% - 45px);
     overflow: hidden;
-}
+} */
 
 .shapeContainer {
     position: relative;
@@ -702,3 +708,107 @@ contain #Participant {
     cursor: nwse-resize;
     /* 或其他适当的光标样式 */
 }
+
+#shape {
+    position: relative;
+    border: 1px solid;
+    border-radius: 10px;
+    margin: 3px 10px;
+    height: calc(100% - 45px);
+    overflow: auto;
+}
+
+
+.menu {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #FBF5DA;
+    border: 1px solid #ddd;
+    margin-bottom: 5px;
+}
+
+.submenu {
+    display: flex;
+    /* 设置为 flex 容器 */
+    flex-wrap: wrap;
+    /* 允许子项换行 */
+    max-height: 0;
+    overflow: auto;
+    transition: max-height 0.5s ease-out;
+    padding: 0 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+
+}
+
+.submenu.expanded {
+    max-height: 500px;
+    /* 设置一个足够大的高度，以便容纳多行项目 */
+    padding: 10px;
+}
+
+
+/* 基本菜單樣式 */
+.context-menu {
+    background-color: #271515;
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 5px #888888;
+    padding: 10px 0;
+    position: absolute;
+    z-index: 1000;
+    list-style-type: none;
+    margin: 0;
+}
+
+/* 個別菜單項目樣式 */
+.context-menu li {
+    padding: 8px 15px;
+    cursor: pointer;
+}
+
+.context-menu li:hover {
+    background-color: #f0f0f0;
+}
+
+/* 子菜單樣式 */
+.ContextSubmenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 5px #888888;
+}
+
+/* 當鼠標懸停在具有子菜單的項目上時顯示子菜單 */
+.context-menu li:hover>.ContextSubmenu {
+    display: block;
+}
+
+
+/* ClassDiagram 的 css*/
+@keyframes blink {
+    0% {
+        background-color: transparent;
+    }
+
+    50% {
+        background-color: rgba(128, 128, 128, 0.5);
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+.blinking {
+    animation: blink 1s linear infinite;
+}
+
+
+
+/*//////////////////////////////////////////////////////*/

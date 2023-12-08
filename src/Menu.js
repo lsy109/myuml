@@ -1,23 +1,23 @@
 import React from 'react';
 
 // class FuncMenu extends React.Component {
-    
+
 // }
 
 class Menu extends React.Component {
     render() {
-        return(
+        return (
             <ul>
                 <li className="drop">
                     <a href="/" className="dropdown" id="file">File</a>
-                    
+
                     <div className="dropdown-content">
                         <a href="/">New</a>
                         <a href="/">Open</a>
                         <a href="/">Save</a>
                         <a href="/">Save as</a>
                         <a href="/">Close</a>
-                    </div>                        
+                    </div>
                 </li>
                 <li className="drop">
                     <a href="/" className="dropdown" id="edit">Edit</a>

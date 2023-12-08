@@ -3,65 +3,146 @@
         {
             "name": "relList",
             "tree": [
-                {"id": "dottedLine", "list": "虛線"}, 
-                {"id": "solidLine", "list": "實線"}, 
-                {"id": "dottedSingleArrow", "list": "虛線單箭頭"}, 
-                {"id": "solidSingleArrow", "list": "實線單箭頭"}, 
-                {"id": "dottedDoubleArrow", "list": "虛線雙箭頭"}, 
-                {"id": "solidDoubleArrow", "list": "實線雙箭頭"}
+                {
+                    "id": "dottedLine",
+                    "list": "虛線"
+                },
+                {
+                    "id": "solidLine",
+                    "list": "實線"
+                },
+                {
+                    "id": "dottedSingleArrow",
+                    "list": "虛線單箭頭"
+                },
+                {
+                    "id": "solidSingleArrow",
+                    "list": "實線單箭頭"
+                },
+                {
+                    "id": "dottedDoubleArrow",
+                    "list": "虛線雙箭頭"
+                },
+                {
+                    "id": "solidDoubleArrow",
+                    "list": "實線雙箭頭"
+                }
             ]
         },
-
         {
             "name": "unitList",
             "tree": [
-                {"id": "box", "list": "方框"}
+                {
+                    "id": "box",
+                    "list": "方框"
+                }
             ]
         },
-
         {
             "name": "fieldList",
             "tree": [
-                {"list": "Technology"},
-                {"list": "Science"},
-                {"list": "Education"},
-                {"list": "Literary"},
-                {"list": "Arts"},
-                {"list": "Medicine"}
+                {
+                    "list": "Technology"
+                },
+                {
+                    "list": "Science"
+                },
+                {
+                    "list": "Education"
+                },
+                {
+                    "list": "Literary"
+                },
+                {
+                    "list": "Arts"
+                },
+                {
+                    "list": "Medicine"
+                }
             ]
         },
-
         {
             "name": "subjectList",
             "tree": {
                 "Technology": [
-                    {"class": "IntroductionToComputer", "list": "Introduction to Computer"},
-                    {"class": "DiscreteMathematics", "list": "Discrete Mathematics"},
-                    {"class": "ProgrammingPython1", "list": "Programming: Python 1"},
-                    {"class": "ProgrammingPython2", "list": "Programming: Python 2"},
-                    {"class": "DataStructures", "list": "Data Structures"},
-                    {"class": "Algorithms", "list": "Algorithms"},
-                    {"class": "SoftwareEngineering", "list": "Software Engineering"}
+                    {
+                        "class": "IntroductionToComputer",
+                        "list": "Introduction to Computer"
+                    },
+                    {
+                        "class": "DiscreteMathematics",
+                        "list": "Discrete Mathematics"
+                    },
+                    {
+                        "class": "ProgrammingPython1",
+                        "list": "Programming: Python 1"
+                    },
+                    {
+                        "class": "ProgrammingPython2",
+                        "list": "Programming: Python 2"
+                    },
+                    {
+                        "class": "DataStructures",
+                        "list": "Data Structures"
+                    },
+                    {
+                        "class": "Algorithms",
+                        "list": "Algorithms"
+                    },
+                    {
+                        "class": "SoftwareEngineering",
+                        "list": "Software Engineering"
+                    }
                 ],
                 "Science": [
-                    {"class": "sci1", "list": "sci1"},
-                    {"class": "sci2", "list": "sci2"}
+                    {
+                        "class": "sci1",
+                        "list": "sci1"
+                    },
+                    {
+                        "class": "sci2",
+                        "list": "sci2"
+                    }
                 ],
                 "Education": [
-                    {"class": "edu1", "list": "edu1"},
-                    {"class": "edu2", "list": "edu2"}
+                    {
+                        "class": "edu1",
+                        "list": "edu1"
+                    },
+                    {
+                        "class": "edu2",
+                        "list": "edu2"
+                    }
                 ],
                 "Literary": [
-                    {"class": "literary1", "list": "literary1"},
-                    {"class": "literary2", "list": "literary2"}
+                    {
+                        "class": "literary1",
+                        "list": "literary1"
+                    },
+                    {
+                        "class": "literary2",
+                        "list": "literary2"
+                    }
                 ],
                 "Arts": [
-                    {"class": "art1", "list": "art1"},
-                    {"class": "art2", "list": "art2"}
+                    {
+                        "class": "art1",
+                        "list": "art1"
+                    },
+                    {
+                        "class": "art2",
+                        "list": "art2"
+                    }
                 ],
                 "Medicine": [
-                    {"class": "medicine1", "list": "medicine1"},
-                    {"class": "medicine2", "list": "medicine2"}
+                    {
+                        "class": "medicine1",
+                        "list": "medicine1"
+                    },
+                    {
+                        "class": "medicine2",
+                        "list": "medicine2"
+                    }
                 ]
             }
         }

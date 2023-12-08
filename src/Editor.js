@@ -123,7 +123,7 @@ class Editor extends React.Component {
             clearInterval(this.interval);
         }, 1);
 
-        console.log(updatedValue);
+
     }
 
 
@@ -239,6 +239,13 @@ class Editor extends React.Component {
         session.setValue(updatedContent);
 
         console.log('更改並重新設置後的內容:', updatedContent);
+    }
+
+    wirteText = (text) => {
+        console.log(text)
+        const editor = this.aceRef.current.editor;
+        const session = editor.getSession();
+        session.setValue(text);
     }
 
 

@@ -4,7 +4,12 @@ import { selectAll as d3_selectAll } from 'd3-selection';
 import 'd3-graphviz';
 import * as d3 from 'd3';
 import axios from 'axios';
-import shapeJson from "./shape.json"
+
+import { ContextMenu, MenuItem, ContextMenuTrigger } from "react-contextmenu";
+
+
+import shapeJson from "./shape.json";
+import DownloadButton from './DownLoad';
 class Graph extends React.Component {
     constructor(props) {
         super(props);
@@ -21,8 +26,7 @@ class Graph extends React.Component {
             arrow: "",
             beforeText: "",
             arrowClick: true,
-            contextMenuX: 0,
-            contextMenuY: 0,
+
             //獲取Edit Panel的實時大小
             dimensions: {
                 width: 0,
@@ -36,13 +40,20 @@ class Graph extends React.Component {
             groupNum: 0,
             ifElse: false,
             ifElseText: "",
+            svgDom: [],
+            closstLeft: null,
+            closstRight: null,
+            closstTop: null,
+            closstBottom: null,
 
+            showContextMenu: false,
+            xPos: 0,
+            yPos: 0
         };
 
         this.dragging = false;
         this.zoomScale = 1;
         this.translate = { x: 0, y: 0 };
-
         this.containerRef = React.createRef();
         this.inputRef = React.createRef();
 
@@ -66,6 +77,7 @@ class Graph extends React.Component {
 
         }
 
+
         // this.setupDragBehavior();
     }
     componentWillUnmount() {
@@ -76,6 +88,7 @@ class Graph extends React.Component {
         if (this.observer && this.containerRef.current) {
             this.observer.unobserve(this.containerRef.current);
         }
+
     }
     componentDidUpdate(prevProps, prevState) {
         if (this.props.svgUrl !== prevProps.svgUrl) {
@@ -126,14 +139,32 @@ class Graph extends React.Component {
     }
     updateSvg() {
         if (this.state.svgContent) {
+
             //editpanel的大小
             const x = this.state.dimensions.width;
             const y = this.state.dimensions.height;
 
+            const svgAima = this.state.svgContent;
 
             const container = d3.select(this.containerRef.current);
-            const tempContainer = d3.create("div").html(this.state.svgContent);
+
+
+            const tempContainer = d3.create("div").html(svgAima);
             const svgElement = tempContainer.select("svg");
+            console.log(svgElement.node())
+            container.on('contextmenu', (event) => {
+                event.preventDefault();
+                console.log({ event: event })
+                this.setState({
+                    showContextMenu: true,
+                    xPos: event.pageX,
+                    yPos: event.pageY
+                });
+                // 假設您的ContextMenuTrigger的id是'svg_context_menu'
+                this.contextMenuTrigger.collect("svg_context_menu");
+            });
+
+
             svgElement.attr("preserveAspectRatio", `xMidYMid meet`);
             let currentStyle = svgElement.attr("style") || "";
 
@@ -159,6 +190,7 @@ class Graph extends React.Component {
         // console.log(d3.select(this.containerRef.current).selectAll("*"))
         const allElements = container.selectAll('*');
         console.log(allElements.nodes());
+        this.setState({ svgDom: allElements.nodes() })
         const nodes = allElements.nodes();
         const EditorText = this.props.EditorText;
         let num = 1;
@@ -856,8 +888,7 @@ class Graph extends React.Component {
         const container = (d3.select(this.containerRef.current)).select('svg');
         const rectLines = container.selectAll("[type='rectLine']").nodes();
         const rectNodes = container.selectAll("rect[type='node']").nodes();
-        console.log(rectLines)
-        console.log(rectNodes)
+
 
         for (var i = 0; i < rectLines.length; i++) {
             const line = rectLines[i].getAttribute("id")
@@ -867,7 +898,7 @@ class Graph extends React.Component {
             d3_select(rect1).attr("Line", `${line}`)
             d3_select(rect2).attr("Line", `${line}`)
 
-            this.createGroup(rect1, rect2, line, container);
+            // this.createGroup(rect1, rect2, line, container);
 
         }
 
@@ -876,28 +907,6 @@ class Graph extends React.Component {
 
     }
 
-    createGroup = (rect1, rect2, Line, container) => {
-        const svg = d3.select(container);
-        const rectOne = rect1;
-        const recttwo = rect2;
-        const rectLine = Line;
-
-        const num = this.createGroupNum();
-        // const group = svg.append('g')
-        //     .attr('id', `nodesGroup_${num}`)
-        //     .attr('type', 'myGroup');
-
-        // rect1.each(function () { group.node().appendChild(this); });
-        // rect2.each(function () { group.node().appendChild(this); });
-        // Line.each(function () { group.node().appendChild(this); });
-
-
-        // const myGroups = d3.selectAll("g[type='myGroup']");
-        // console.log(myGroups)
-
-
-
-    }
     drawRectLine = (rectLines, container) => {
         for (var i = 0; i < rectLines.length; i++) {
             let line = rectLines[i];
@@ -907,7 +916,7 @@ class Graph extends React.Component {
             var y2 = parseFloat(line.getAttribute("y2"));
 
 
-            console.log(x1, y1, x2, y2)
+
 
             var rectWidth = 10;  // 这是框的宽度，您可以根据需要调整
             var rectHeight = Math.abs(y2 - y1);
@@ -927,7 +936,7 @@ class Graph extends React.Component {
                 .on('drop', this.bbb)
 
 
-            // .attr("stroke", "red");
+
 
         }
 
@@ -936,30 +945,16 @@ class Graph extends React.Component {
     test = (container) => {
         //雙擊
         container.selectAll("text").on("dblclick", this.textHandleDoubleClick.bind(this));
-        // container.selectAll("line").on("dblclick", this.handleLineClick.bind(this))
-        // container.selectAll("polygon").on("dblclick", this.handleLineClick.bind(this));
         container.selectAll('[type="Loop"]').on("dblclick", this.ifelsepDbClick.bind(this));
         container.selectAll('[type="Alt"]').on("dblclick", this.ifelsepDbClick.bind(this));
         container.selectAll('[type="Opt"]').on("dblclick", this.ifelsepDbClick.bind(this));
         //單擊
-        container.selectAll("line").on("contextmenu", this.contextMenu.bind(this));
-        // container.selectAll("text").on("click", this.handleLeftClick.bind(this));
+
         container.on("click", this.resetAllBoolean.bind(this));
         container.selectAll("svg").on("wheel", this.mouseWheel.bind(this));
         container.selectAll("*").on("click", this.DomLine);
 
-
-        // container.select("svg").on("click", function (event) {
-        //     console.log(event)
-        //     var coordinates = d3.pointer(event);
-        //     var x = coordinates[0];
-        //     var y = coordinates[1];
-        //     console.log(x, y);
-        // });
-        // container.selectAll("svg").on("drag", this.mouseDrag.bind(this));
-
-        //取消預設
-
+        //右鍵
 
     }
 
@@ -998,199 +993,6 @@ class Graph extends React.Component {
     }
 
 
-
-    contextMenu = (event) => {
-        if (event.currentTarget.nodeName === 'g' || event.currentTarget.nodeName === 'svg') {
-
-
-        } else {
-
-            //點擊到綫條或者箭頭
-            if (event.currentTarget.nodeName === "line" || event.currentTarget.nodeName === "polygon") {
-                console.log(event.currentTarget.id)
-                // this.setState({ arrowClick: true })
-                const clickedLine = d3.select(event.currentTarget);
-                const isHighlighted = clickedLine.classed("highlighted");
-
-                // 为该元素设置红色的边框和边框宽度
-                if (isHighlighted) {
-                    // 移除之前的高亮
-                    d3.select("#highlighted-border").remove();
-                    clickedLine.classed("highlighted", false);
-                } else {
-                    // 添加高亮
-                    const x1 = parseFloat(clickedLine.attr("x1"));
-                    const y1 = parseFloat(clickedLine.attr("y1"));
-                    const x2 = parseFloat(clickedLine.attr("x2"));
-                    const y2 = parseFloat(clickedLine.attr("y2"));
-
-                    const minX = Math.min(x1, x2) - 2;
-                    const minY = Math.min(y1, y2) - 5;
-                    const width = Math.abs(x2 - x1) + 4;
-                    const height = Math.abs(y2 - y1) + 10;
-
-                    const container = d3.select(event.currentTarget.parentNode);
-                    container.append("rect")
-                        .attr("id", "highlighted-border")
-                        .attr("x", minX)
-                        .attr("y", minY)
-                        .attr("width", width)
-                        .attr("height", height)
-                        .style("fill", "none")
-                        .style("stroke", "black")
-                        .style("stroke-width", "2px")
-                        .style("stroke-dasharray", "5,5")
-                        .lower(); // 确保新的rect在原始line下方
-
-                    clickedLine.classed("highlighted", true);
-                }
-                this.Whicharrow(event.currentTarget.id)
-
-            }
-            //點擊到node圖形
-            else if (event.currentTarget.nodeName === 'text' && event.currentTarget.getAttribute("type") === "node") {
-                if (event.currentTarget.nodeName === 'text' || event.currentTarget.nodeName === 'rect') {
-                    const getid = event.currentTarget.id;
-
-                    const clickedRect = d3_select("[id=" + `${getid}` + "]")
-
-                    const isHighlighted = clickedRect.classed("highlighted");
-                    if (isHighlighted) {
-                        // 移除之前的高亮
-                        d3.select("#highlighted-border").remove();
-                        clickedRect.classed("highlighted", false);
-                    } else {
-                        // 添加高亮
-                        const x = parseFloat(clickedRect.attr("x")) - 2; //根据需要调整偏移量
-                        const y = parseFloat(clickedRect.attr("y")) - 2;
-                        const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                        const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                        const container = d3.select(event.currentTarget.parentNode);
-                        container.append("rect")
-                            .attr("id", "highlighted-border")
-                            .attr("x", x)
-                            .attr("y", y)
-                            .attr("width", width)
-                            .attr("height", height)
-                            .style("fill", "none")
-                            .style("stroke", "black")
-                            .style("stroke-width", "2px")
-                            .style("stroke-dasharray", "5,5")
-                            .lower(); // 确保新的rect在原始rect下方
-
-                        clickedRect.classed("highlighted", true);
-                    }
-
-                } else {
-                    const clickedRect = d3.select(event.currentTarget);
-
-                    const isHighlighted = clickedRect.classed("highlighted");
-
-                    // 为该元素设置红色的边框和边框宽度
-                    if (isHighlighted) {
-                        // 移除之前的高亮
-                        d3.select("#highlighted-border").remove();
-                        clickedRect.classed("highlighted", false);
-                    } else {
-                        // 添加高亮
-                        const x = parseFloat(clickedRect.attr("x")) - 2; // 你可以根据需要调整偏移量
-                        const y = parseFloat(clickedRect.attr("y")) - 2;
-                        const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                        const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                        const container = d3.select(event.currentTarget.parentNode);
-                        container.append("rect")
-                            .attr("id", "highlighted-border")
-                            .attr("x", x)
-                            .attr("y", y)
-                            .attr("width", width)
-                            .attr("height", height)
-                            .style("fill", "none")
-                            .style("stroke", "black")
-                            .style("stroke-width", "2px")
-                            .style("stroke-dasharray", "5,5")
-                            .lower(); // 确保新的rect在原始rect下方
-
-                        clickedRect.classed("highlighted", true);
-                    }
-                }
-
-
-                //如果點擊的是edge
-            } else if (event.currentTarget.nodeName === 'text' && event.currentTarget.getAttribute("type") === "edge") {
-                const getid = event.currentTarget.id;
-
-
-                const clickedRect = d3_select(`text#${getid}`)
-
-
-                const isHighlighted = clickedRect.classed("highlighted");
-                if (isHighlighted) {
-                    // 移除之前的高亮
-                    d3.select("#highlighted-border").remove();
-                    clickedRect.classed("highlighted", false);
-                } else {
-                    // 添加高亮
-                    const x = parseFloat(clickedRect.attr("x")) - 5; //根据需要调整偏移量
-                    const y = parseFloat(clickedRect.attr("y")) - 10;
-
-                    const width = (Number(event.currentTarget.getAttribute('textLength')) + 10).toString(); // 增加的大小，这里我加了4
-                    const height = (Number(event.currentTarget.getAttribute('font-size')) + 2).toString();
-
-                    const container = d3.select(event.currentTarget.parentNode);
-                    container.append("rect")
-                        .attr("id", "highlighted-border")
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("width", width)
-                        .attr("height", height)
-                        .style("fill", "none")
-                        .style("stroke", "black")
-                        .style("stroke-width", "2px")
-                        .style("stroke-dasharray", "5,5")
-                        .lower(); // 确保新的rect在原始rect下方
-
-                    clickedRect.classed("highlighted", true);
-                }
-
-            } else {
-                const clickedRect = d3.select(event.currentTarget);
-
-                const isHighlighted = clickedRect.classed("highlighted");
-
-                // 为该元素设置红色的边框和边框宽度
-                if (isHighlighted) {
-                    // 移除之前的高亮
-                    d3.select("#highlighted-border").remove();
-                    clickedRect.classed("highlighted", false);
-                } else {
-                    // 添加高亮
-                    const x = parseFloat(clickedRect.attr("x")) - 2; // 你可以根据需要调整偏移量
-                    const y = parseFloat(clickedRect.attr("y")) - 2;
-                    const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                    const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                    const container = d3.select(event.currentTarget.parentNode);
-                    container.append("rect")
-                        .attr("id", "highlighted-border")
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("width", width)
-                        .attr("height", height)
-                        .style("fill", "none")
-                        .style("stroke", "black")
-                        .style("stroke-width", "2px")
-                        .style("stroke-dasharray", "5,5")
-                        .lower(); // 确保新的rect在原始rect下方
-
-                    clickedRect.classed("highlighted", true);
-                }
-
-            }
-
-        }
-    }
 
     //判斷箭頭的種類
     Whicharrow = (arrowId) => {
@@ -1311,210 +1113,7 @@ class Graph extends React.Component {
     }
 
     //左鍵雙擊的判斷function
-    handleLeftClick = (event, d) => {
 
-
-        if (event.currentTarget.nodeName === 'g' || event.currentTarget.nodeName === 'svg') {
-
-
-        } else {
-
-            //點擊到綫條或者箭頭
-            if (event.currentTarget.nodeName === "line" || event.currentTarget.nodeName === "polygon") {
-                console.log(event.currentTarget.id)
-                // this.setState({ arrowClick: true })
-                const clickedLine = d3.select(event.currentTarget);
-                const isHighlighted = clickedLine.classed("highlighted");
-
-                // 为该元素设置红色的边框和边框宽度
-                if (isHighlighted) {
-                    // 移除之前的高亮
-                    d3.select("#highlighted-border").remove();
-                    clickedLine.classed("highlighted", false);
-                } else {
-                    // 添加高亮
-                    const x1 = parseFloat(clickedLine.attr("x1"));
-                    const y1 = parseFloat(clickedLine.attr("y1"));
-                    const x2 = parseFloat(clickedLine.attr("x2"));
-                    const y2 = parseFloat(clickedLine.attr("y2"));
-
-                    const minX = Math.min(x1, x2) - 2;
-                    const minY = Math.min(y1, y2) - 5;
-                    const width = Math.abs(x2 - x1) + 4;
-                    const height = Math.abs(y2 - y1) + 10;
-
-                    const container = d3.select(event.currentTarget.parentNode);
-                    container.append("rect")
-                        .attr("id", "highlighted-border")
-                        .attr("x", minX)
-                        .attr("y", minY)
-                        .attr("width", width)
-                        .attr("height", height)
-                        .style("fill", "none")
-                        .style("stroke", "black")
-                        .style("stroke-width", "2px")
-                        .style("stroke-dasharray", "5,5")
-                        .on("mouseenter", function () {
-                            d3.select(this).style("cursor", "crosshair")
-
-                        })
-                        .on("mouseleave", function () {
-                            d3.select(this).style("cursor", "default");
-                        })
-
-
-                        .lower(); // 确保新的rect在原始line下方
-
-                    clickedLine.classed("highlighted", true);
-                }
-
-
-            }
-            //點擊到node圖形
-            else if (event.currentTarget.nodeName === 'text' && event.currentTarget.getAttribute("type") === "node") {
-                if (event.currentTarget.nodeName === 'text' || event.currentTarget.nodeName === 'rect') {
-                    const getid = event.currentTarget.id;
-
-                    const clickedRect = d3_select("[id=" + `${getid}` + "]")
-
-                    const isHighlighted = clickedRect.classed("highlighted");
-                    if (isHighlighted) {
-                        // 移除之前的高亮
-                        d3.select("#highlighted-border").remove();
-                        clickedRect.classed("highlighted", false);
-                    } else {
-                        // 添加高亮
-                        const x = parseFloat(clickedRect.attr("x")) - 2; //根据需要调整偏移量
-                        const y = parseFloat(clickedRect.attr("y")) - 2;
-                        const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                        const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                        const container = d3.select(event.currentTarget.parentNode);
-                        container.append("rect")
-                            .attr("id", "highlighted-border")
-                            .attr("x", x)
-                            .attr("y", y)
-                            .attr("width", width)
-                            .attr("height", height)
-                            .style("fill", "none")
-                            .style("stroke", "black")
-                            .style("stroke-width", "2px")
-                            .style("stroke-dasharray", "5,5")
-                            .lower(); // 确保新的rect在原始rect下方
-
-                        clickedRect.classed("highlighted", true);
-                    }
-
-                } else {
-                    const clickedRect = d3.select(event.currentTarget);
-
-                    const isHighlighted = clickedRect.classed("highlighted");
-
-                    // 为该元素设置红色的边框和边框宽度
-                    if (isHighlighted) {
-                        // 移除之前的高亮
-                        d3.select("#highlighted-border").remove();
-                        clickedRect.classed("highlighted", false);
-                    } else {
-                        // 添加高亮
-                        const x = parseFloat(clickedRect.attr("x")) - 2; // 你可以根据需要调整偏移量
-                        const y = parseFloat(clickedRect.attr("y")) - 2;
-                        const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                        const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                        const container = d3.select(event.currentTarget.parentNode);
-                        container.append("rect")
-                            .attr("id", "highlighted-border")
-                            .attr("x", x)
-                            .attr("y", y)
-                            .attr("width", width)
-                            .attr("height", height)
-                            .style("fill", "none")
-                            .style("stroke", "black")
-                            .style("stroke-width", "2px")
-                            .style("stroke-dasharray", "5,5")
-                            .lower(); // 确保新的rect在原始rect下方
-
-                        clickedRect.classed("highlighted", true);
-                    }
-                }
-
-
-                //如果點擊的是edge
-            } else if (event.currentTarget.nodeName === 'text' && event.currentTarget.getAttribute("type") === "edge") {
-                const getid = event.currentTarget.id;
-
-
-                const clickedRect = d3_select(`text#${getid}`)
-
-
-                const isHighlighted = clickedRect.classed("highlighted");
-                if (isHighlighted) {
-                    // 移除之前的高亮
-                    d3.select("#highlighted-border").remove();
-                    clickedRect.classed("highlighted", false);
-                } else {
-                    // 添加高亮
-                    const x = parseFloat(clickedRect.attr("x")) - 5; //根据需要调整偏移量
-                    const y = parseFloat(clickedRect.attr("y")) - 10;
-
-                    const width = (Number(event.currentTarget.getAttribute('textLength')) + 10).toString(); // 增加的大小，这里我加了4
-                    const height = (Number(event.currentTarget.getAttribute('font-size')) + 2).toString();
-
-                    const container = d3.select(event.currentTarget.parentNode);
-                    container.append("rect")
-                        .attr("id", "highlighted-border")
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("width", width)
-                        .attr("height", height)
-                        .style("fill", "none")
-                        .style("stroke", "black")
-                        .style("stroke-width", "2px")
-                        .style("stroke-dasharray", "5,5")
-                        .lower(); // 确保新的rect在原始rect下方
-
-                    clickedRect.classed("highlighted", true);
-                }
-
-            } else {
-                const clickedRect = d3.select(event.currentTarget);
-
-                const isHighlighted = clickedRect.classed("highlighted");
-
-                // 为该元素设置红色的边框和边框宽度
-                if (isHighlighted) {
-                    // 移除之前的高亮
-                    d3.select("#highlighted-border").remove();
-                    clickedRect.classed("highlighted", false);
-                } else {
-                    // 添加高亮
-                    const x = parseFloat(clickedRect.attr("x")) - 2; // 你可以根据需要调整偏移量
-                    const y = parseFloat(clickedRect.attr("y")) - 2;
-                    const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                    const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                    const container = d3.select(event.currentTarget.parentNode);
-                    container.append("rect")
-                        .attr("id", "highlighted-border")
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("width", width)
-                        .attr("height", height)
-                        .style("fill", "none")
-                        .style("stroke", "black")
-                        .style("stroke-width", "2px")
-                        .style("stroke-dasharray", "5,5")
-                        .lower(); // 确保新的rect在原始rect下方
-
-                    clickedRect.classed("highlighted", true);
-                }
-
-            }
-
-        }
-
-    }
     //點擊別的地方時重置變數
     resetAllBoolean = () => {
         this.setState({
@@ -1534,175 +1133,11 @@ class Graph extends React.Component {
     }
 
 
-    // eventHandel = () => {
-
-    //     d3.select(this.containerRef.current).selectAll("[type='node']").on("click", this.handleRightClick.bind(this));
-    // }
-    // handleTextClick(event, d) {
-    //     console.log()
-
-    // }
-    handleEdgeDoubleClick(event, d) {
-        const clickedLineId = event.currentTarget.id;
-        console.log(clickedLineId)
-        const element = d3.select(`#${clickedLineId}`);
-        const element2 = d3.selectAll('line').filter(`#${clickedLineId}`);
-
-        // 1. 获取line的起点和终点坐标
-        const x1 = parseFloat(element2.attr("x1"));
-        const y1 = parseFloat(element2.attr("y1"));
-        const x2 = parseFloat(element2.attr("x2"));
-        const y2 = parseFloat(element2.attr("y2"));
-        console.log(x1)
-        // 2. 交换line的起点和终点坐标
-        element2.attr("x1", x2)
-            .attr("y1", y2)
-            .attr("x2", x1)
-            .attr("y2", y1);
-
-        // 3. 将箭头移动到原始的line起点
-        // 假设箭头是一个polygon或path，您需要根据具体情况修改这一部分
-        // const transform = `translate(${x1}, ${y1})`;
-        // element.attr("transform", transform);
-
-
-        // 如果元素是多邊形，計算其中心
-        if (element.node().tagName === 'polygon') {
-            const points = element.attr("points").split(" ").map(d => d.split(",").map(Number));
-            const centerX = d3.mean(points, d => d[0]);
-            const centerY = d3.mean(points, d => d[1]);
-
-
-            // 在中心點上進行反轉
-            element.attr("transform", `translate(${centerX},${centerY}) scale(-1, 1) translate(-${centerX},-${centerY})`);
-        } else {
-            element.attr("transform", "scale(-1, 1)");
-        }
-        if (element.node().tagName === "line") {
-        }
-
-        console.log(element);
-
-
-    }
-    handleEdgeClick(event, d) {
-        if (event.currentTarget.nodeName === "line" || event.currentTarget.nodeName === "polygon") {
-            const clickedLine = d3.select(event.currentTarget);
-
-
-            const isHighlighted = clickedLine.classed("highlighted");
-
-            // 为该元素设置红色的边框和边框宽度
-            if (isHighlighted) {
-                // 移除之前的高亮
-                d3.select("#highlighted-border").remove();
-                clickedLine.classed("highlighted", false);
-            } else {
-                // 添加高亮
-                const x1 = parseFloat(clickedLine.attr("x1"));
-                const y1 = parseFloat(clickedLine.attr("y1"));
-                const x2 = parseFloat(clickedLine.attr("x2"));
-                const y2 = parseFloat(clickedLine.attr("y2"));
-
-                const minX = Math.min(x1, x2) - 2;
-                const minY = Math.min(y1, y2) - 5;
-                const width = Math.abs(x2 - x1) + 4;
-                const height = Math.abs(y2 - y1) + 10;
-
-                const container = d3.select(event.currentTarget.parentNode);
-                container.append("rect")
-                    .attr("id", "highlighted-border")
-                    .attr("x", minX)
-                    .attr("y", minY)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .style("fill", "none")
-                    .style("stroke", "black")
-                    .style("stroke-width", "2px")
-                    .style("stroke-dasharray", "5,5")
-                    .lower(); // 确保新的rect在原始line下方
-
-                clickedLine.classed("highlighted", true);
-            }
-
-        }
-        console.log("line")
-
-    }
-
-    handleRightClick(event, d) {
-
-        if (event.currentTarget.nodeName === "text") {
-
-            const getid = event.currentTarget.id;
-            const clickedRect = d3_select("[id=" + `${getid}` + "]")
-
-            const isHighlighted = clickedRect.classed("highlighted");
-            if (isHighlighted) {
-                // 移除之前的高亮
-                d3.select("#highlighted-border").remove();
-                clickedRect.classed("highlighted", false);
-            } else {
-                // 添加高亮
-                const x = parseFloat(clickedRect.attr("x")) - 2; // 你可以根据需要调整偏移量
-                const y = parseFloat(clickedRect.attr("y")) - 2;
-                const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                const container = d3.select(event.currentTarget.parentNode);
-                container.append("rect")
-                    .attr("id", "highlighted-border")
-                    .attr("x", x)
-                    .attr("y", y)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .style("fill", "none")
-                    .style("stroke", "black")
-                    .style("stroke-width", "2px")
-                    .style("stroke-dasharray", "5,5")
-                    .lower(); // 确保新的rect在原始rect下方
-
-                clickedRect.classed("highlighted", true);
-            }
-
-        } else {
-            const clickedRect = d3.select(event.currentTarget);
-
-            const isHighlighted = clickedRect.classed("highlighted");
-
-            // 为该元素设置红色的边框和边框宽度
-            if (isHighlighted) {
-                // 移除之前的高亮
-                d3.select("#highlighted-border").remove();
-                clickedRect.classed("highlighted", false);
-            } else {
-                // 添加高亮
-                const x = parseFloat(clickedRect.attr("x")) - 2; // 你可以根据需要调整偏移量
-                const y = parseFloat(clickedRect.attr("y")) - 2;
-                const width = parseFloat(clickedRect.attr("width")) + 4; // 增加的大小，这里我加了4
-                const height = parseFloat(clickedRect.attr("height")) + 4;
-
-                const container = d3.select(event.currentTarget.parentNode);
-                container.append("rect")
-                    .attr("id", "highlighted-border")
-                    .attr("x", x)
-                    .attr("y", y)
-                    .attr("width", width)
-                    .attr("height", height)
-                    .style("fill", "none")
-                    .style("stroke", "black")
-                    .style("stroke-width", "2px")
-                    .style("stroke-dasharray", "5,5")
-                    .lower(); // 确保新的rect在原始rect下方
-
-                clickedRect.classed("highlighted", true);
-            }
-        }
 
 
 
 
-    }
+
     textHandleDoubleClick = (element) => {
         console.log(element)
         // if (element.currentTarget.getAttribute("type") === "node") { }
@@ -1739,7 +1174,7 @@ class Graph extends React.Component {
                 console.log(nodeText1, nodeText2)
                 if (nodeText1 === nodeText2) {
 
-                    console.log("aa")
+
                     node1 = `node_${num}`;
                     node2 = `node_${num + 1}`;
                     const nodes1 = container.select(`text#${node1}`);
@@ -1805,7 +1240,6 @@ class Graph extends React.Component {
                 }
 
 
-                console.log(nodeText1)
                 if (nodeText1 === nodeText2) {
 
                     node1 = `actor_${num + 1}`;
@@ -1987,19 +1421,6 @@ class Graph extends React.Component {
     }
     //
 
-    handleMenuItemClick = (e, data) => {
-        console.log(data.foo); // 這裡會印出 "example"
-    }
-    handleRightClick = (e) => {
-        e.preventDefault();
-        console.log(e.clientX)
-
-        this.setState({
-            arrowClick: true,
-            contextMenuX: e.clientX,
-            contextMenuY: e.clientY
-        });
-    };
 
 
 
@@ -2011,7 +1432,6 @@ class Graph extends React.Component {
 
         const text = this.props.data;
         if (text === "Arrow1") {
-
             let container = (d3.select(this.containerRef.current)).select('svg');
             let rect = container.selectAll(".group");
             rect.attr("pointer-events", "auto");
@@ -2049,18 +1469,51 @@ class Graph extends React.Component {
         let line = d3.selectAll(".rectLine");
         line.classed("flash", false);
 
-
-        console.log(data)
         if (data === "Arrow1") {
-
             let rects = this.state.dragRect;
-            console.log(rects)
             let text1 = rects[0]
             let text2 = rects[1]
+            let str = this.props.EditorText.split('\n')
 
-            let text = `${text1} -> ${text2}: text${this.TextNum()}`
+            if (str.includes(`participant ${text1}`)) {
+                if (str.includes(`participant ${text2}`)) {
+                    str = str.filter(item => item !== `participant ${text2}`);
+                }
 
-            this.props.shapeText(text)
+
+                let newStr = str.map(item => {
+                    if (item === `participant ${text1}`) {
+                        return `${text1} -> ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else if (str.includes(`participant ${text2}`)) {
+                if (str.includes(`participant ${text1}`)) {
+                    str = str.filter(item => item !== `participant ${text1}`);
+                }
+                let newStr = str.map(item => {
+                    if (item === `participant ${text2}`) {
+                        return `${text1} -> ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else {
+                if (text1 != undefined || text2 != undefined) {
+
+                    let text = `${text1} -> ${text2}: text${this.TextNum()}`
+                    this.props.shapeText(text)
+                }
+
+            }
+
 
         }
         else if (data === "Shape") {
@@ -2072,35 +1525,149 @@ class Graph extends React.Component {
         }
         else if (data === "Arrow2") {
             let rects = this.state.dragRect;
-            console.log(rects)
             let text1 = rects[0]
             let text2 = rects[1]
+            let str = this.props.EditorText.split('\n')
 
-            let text = `${text1} <- ${text2}: text${this.TextNum()}`
+            if (str.includes(`participant ${text1}`)) {
+                if (str.includes(`participant ${text2}`)) {
+                    str = str.filter(item => item !== `participant ${text2}`);
+                }
 
-            this.props.shapeText(text)
+
+                let newStr = str.map(item => {
+                    if (item === `participant ${text1}`) {
+                        return `${text1} <- ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else if (str.includes(`participant ${text2}`)) {
+                if (str.includes(`participant ${text1}`)) {
+                    str = str.filter(item => item !== `participant ${text1}`);
+                }
+                let newStr = str.map(item => {
+                    if (item === `participant ${text2}`) {
+                        return `${text1} <- ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else {
+                if (text1 != undefined || text2 != undefined) {
+
+                    let text = `${text1} <- ${text2}: text${this.TextNum()}`
+                    this.props.shapeText(text)
+                }
+
+            }
+
+
+
 
         }
         else if (data === "Arrow3") {
             let rects = this.state.dragRect;
-            console.log(rects)
             let text1 = rects[0]
             let text2 = rects[1]
+            let str = this.props.EditorText.split('\n')
 
-            let text = `${text1} --> ${text2}: text${this.TextNum()}`
+            if (str.includes(`participant ${text1}`)) {
+                if (str.includes(`participant ${text2}`)) {
+                    str = str.filter(item => item !== `participant ${text2}`);
+                }
 
-            this.props.shapeText(text)
+
+                let newStr = str.map(item => {
+                    if (item === `participant ${text1}`) {
+                        return `${text1} --> ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else if (str.includes(`participant ${text2}`)) {
+                if (str.includes(`participant ${text1}`)) {
+                    str = str.filter(item => item !== `participant ${text1}`);
+                }
+                let newStr = str.map(item => {
+                    if (item === `participant ${text2}`) {
+                        return `${text1} --> ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else {
+                if (text1 != undefined || text2 != undefined) {
+
+                    let text = `${text1} --> ${text2}: text${this.TextNum()}`
+
+                    this.props.shapeText(text)
+                }
+
+            }
+
+
 
         }
         else if (data === "Arrow4") {
             let rects = this.state.dragRect;
-            console.log(rects)
             let text1 = rects[0]
             let text2 = rects[1]
+            let str = this.props.EditorText.split('\n')
 
-            let text = `${text1} <-- ${text2}: text${this.TextNum()}`
+            if (str.includes(`participant ${text1}`)) {
+                if (str.includes(`participant ${text2}`)) {
+                    str = str.filter(item => item !== `participant ${text2}`);
+                }
 
-            this.props.shapeText(text)
+
+                let newStr = str.map(item => {
+                    if (item === `participant ${text1}`) {
+                        return `${text1} <-- ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else if (str.includes(`participant ${text2}`)) {
+                if (str.includes(`participant ${text1}`)) {
+                    str = str.filter(item => item !== `participant ${text1}`);
+                }
+                let newStr = str.map(item => {
+                    if (item === `participant ${text2}`) {
+                        return `${text1} <-- ${text2}: text${this.TextNum()}`;
+                    } else {
+                        return item;
+                    }
+                });
+
+                let newText = newStr.join("\n");
+                this.props.witreToEdit(newText);
+            } else {
+                if (text1 != undefined || text2 != undefined) {
+
+                    let text = `${text1} <-- ${text2}: text${this.TextNum()}`
+
+                    this.props.shapeText(text)
+                }
+
+            }
+
+
 
         }
         else if (data === "activate") {
@@ -2129,18 +1696,51 @@ end`
 end`
             this.props.graphzhuehyuyan(text)
         }
+        else if (data === "Actor") {
+            const text = `actor Actor${this.TextNum()}`;
+            this.props.shapeText(text)
+
+        }
+        else if (data === "Boundary") {
+            const text = `boundary Boundary${this.TextNum()}`;
+            this.props.shapeText(text)
+        }
+        else if (data === "Control") {
+            const text = `control Control${this.TextNum()}`;
+            this.props.shapeText(text)
+        }
+        else if (data === "Entity") {
+            const text = `entity Entity${this.TextNum()}`;
+            this.props.shapeText(text)
+        }
+        else if (data === "Database") {
+            const text = `database Database${this.TextNum()}`;
+            this.props.shapeText(text)
+        }
+        else if (data === "Collections") {
+            const text = `collections Collections${this.TextNum()}`;
+            this.props.shapeText(text)
+        }
+        else if (data === "Queue") {
+            const text = `queue Queue${this.TextNum()}`;
+            this.props.shapeText(text)
+        }
+
         else {
             const text = shapeJson.shape[data].text
             this.props.shapeText(text)
-            console.log(text)
+
         }
 
 
         // 在此處根據 `data` 做你想要的操作，例如將圖片加入到此組件中
     };
+
+    //////
+    //這裏處理箭頭托拽
     aaa = (e) => {
+        console.log("zheli1")
         e.preventDefault();
-        console.log("pp")
         const bigRect = d3.select(e.target).node();
         const Text = [];
 
@@ -2165,6 +1765,7 @@ end`
     }
 
     bbb = (e) => {
+
         const bigRect = d3.select(e.target).node();
         const rect = d3.select(`[Line = ${bigRect.getAttribute("Line")}]`).node();
         const text1 = d3.select(`text[id =${rect.getAttribute('id')} ]`).text()
@@ -2172,57 +1773,11 @@ end`
         const Text = [];
         Text.push(text1);
         this.setState({ dragRect: Text })
-        // const text1 = d3.select(`text[id = ${bigRect.getAttribute('')}]`)
-
-
 
     }
 
     /////////////////////////////////////////////////////////////////////////
 
-    //偵測鼠標的位置
-    // whereMouse = (lines, x, y, rects) => {
-
-    //     for (var i = 0; i < lines.length; i += 2) {
-    //         let line1 = parseFloat(lines[i].getAttribute('x1'));
-    //         let line2 = parseFloat(lines[i + 1].getAttribute('x1'));
-    //         let line3 = parseFloat(lines[i].getAttribute('y1'));
-    //         let line4 = parseFloat(lines[i].getAttribute('y2'));
-
-
-
-
-    //         if (x > line1 && x < line2 && y > line3 && y < line4) {
-
-
-    //             let rect1;
-    //             let rect2;
-    //             for (var j = 0; j < rects.length; j += 4) {
-    //                 let ret1 = parseFloat(rects[j].getAttribute('x'));
-    //                 let ret2 = parseFloat(rects[j + 1].getAttribute('x'));
-    //                 let ret3 = parseFloat(rects[j + 2].getAttribute('x'));
-    //                 let ret4 = parseFloat(rects[j + 3].getAttribute('x'));
-
-
-    //                 if (line1 > ret1 && line2 > ret3) {
-    //                     // console.log("dd")
-    //                     // console.log(line1, line2)
-    //                     // console.log(ret1, ret2, ret3, ret4)
-    //                 }
-
-
-    //             }
-    //             // for (var j = 0; j < rects.length; j += 2) {
-    //             //     console.log(j)
-    //             //     let rect1 = rects[j].getAttribute('x');
-    //             //     let rect2 = rects[j + 1].getAttribute('x');
-    //             //     console.log(rect1, rect2)
-    //             // }
-
-    //         }
-
-    //     }
-    // }
 
     //偵測元素的位置
     drawRect = () => {
@@ -2276,9 +1831,7 @@ end`
 
     }
 
-    addResizeHandles(clickedElement, bbox) {
-        // ...（此处是之前提供的 addResizeHandles 函数的代码）
-    }
+
     removeResizeHandles = () => {
         d3.selectAll('.resize-handle').remove();
     };
@@ -2287,12 +1840,15 @@ end`
     DomLine = (event) => {
         event.stopPropagation();
         const clickedElement = d3.select(event.currentTarget);
+        const container = this.state.svgDom;
+        let text = this.props.EditorText.split('\n')
+
         try {
             // 检查是否为 text 元素
             if (clickedElement.node().tagName === 'text') {
                 return; // 如果是 text 元素，则不进行任何操作
             }
-            console.log(d3_selectAll(`#rectLine_1`).node())
+
             const isHighlighted = clickedElement.classed('highlighted');
 
 
@@ -2324,7 +1880,7 @@ end`
                     .call(d3.drag()
                         .on("start", dragstarted)
                         .on("drag", dragged)
-                        .on("end", dragended));
+                        .on("end", (e) => dragended(e)));
 
 
 
@@ -2358,9 +1914,137 @@ end`
                 function dragstarted(event) {
                     d3.select(this).raise(); // 提升层级以便拖拽
                 }
+                function makeLine(element, d, event) {
+                    const bbox = d3.select(element).node().getBBox();
+                    const currentX = bbox.x + bbox.width / 2;
+                    const currentY = bbox.y + bbox.height / 2;
+                    const elementType = d3.select(clickedElement.node()).attr('type');  // 获取自定义属性 'type'
+
+                    // 获取 SVG 容器的尺寸
+                    const svgWidth = d3.select('svg').node().clientWidth;
+                    const svgHeight = d3.select('svg').node().clientHeight;
+
+                    // 选择或创建辅助线
+                    let line = d3.select('#auxiliary-line');
+                    if (line.empty()) {
+                        line = d3.select('svg')
+                            .append('line')
+                            .attr('id', 'auxiliary-line')
+                            .attr('stroke', 'black')
+                            .attr('stroke-width', 2);
+                    }
+
+                    // 根据 'type' 属性值绘制辅助线
+                    if (elementType === 'node') {
+                        line.attr('x1', currentX)
+                            .attr('y1', -svgHeight)
+                            .attr('x2', currentX)
+                            .attr('y2', svgHeight);
+
+                        // 查找左右两侧最近的元素
+
+                    } else {
+                        line.attr('x1', 0)
+                            .attr('y1', currentY)
+                            .attr('x2', svgWidth)
+                            .attr('y2', currentY);
+
+                        // 查找上下最近的元素
+
+                    }
+                }
+
+                const findClosestElements = (positionX, positionY) => {
+
+                    const elements = container; // 確保這裡的 container 是元素集合
+                    let closestLeft = null, closestRight = null;
+                    let closestTop = null, closestBottom = null;
+                    let minLeftDistance = Infinity, minRightDistance = Infinity;
+                    let minTopDistance = Infinity, minBottomDistance = Infinity;
+
+                    elements.slice(3).forEach(el => {
+                        // 檢查元素是否是 rect 類型且 type 屬性為 'node'
+
+                        const bbox = el.getBBox();
+                        const elXCenter = bbox.x + bbox.width / 2;
+                        const elYCenter = bbox.y + bbox.height / 2;
+
+                        // 水平方向判斷（竪線時）
+                        if (positionX !== null) {
+
+                            if (el.tagName.toLowerCase() === 'rect' && el.getAttribute('type') === 'node') {
+
+                                if (elXCenter < positionX) { // 元素在輔助線左側
+
+                                    const distance = positionX - elXCenter;
+                                    if (distance < minLeftDistance) {
+                                        minLeftDistance = distance;
+                                        closestLeft = el;
+                                    }
+
+                                } else if (elXCenter > positionX) { // 元素在輔助線右側
+                                    const distance = elXCenter - positionX;
+                                    if (distance < minRightDistance) {
+                                        minRightDistance = distance;
+                                        closestRight = el;
+                                    }
+
+
+                                }
+                            }
+                        }
+
+                        // 垂直方向判斷（橫線時）
+                        if (positionY !== null) {
+
+
+                            if (elYCenter < positionY) { // 元素在輔助線上方
+                                const distance = positionY - elYCenter;
+                                if (distance < minTopDistance) {
+                                    minTopDistance = distance;
+                                    closestTop = el;
+                                }
+                            } else if (elYCenter > positionY) { // 元素在輔助線下方
+                                const distance = elYCenter - positionY;
+                                if (distance < minBottomDistance) {
+                                    minBottomDistance = distance;
+                                    closestBottom = el;
+                                }
+                            }
+
+                        }
+
+                    });
+
+                    // 輸出最近的元素
+                    if (positionX !== null) {
+                        this.setState({
+                            closstLeft: closestLeft,
+                            closstRight: closestRight
+                        })
+
+
+
+
+                    }
+
+                    if (positionY !== null) {
+
+                        this.setState({
+                            closstTop: closestTop,
+                            closstBottom: closestBottom,
+                        })
+
+                    }
+                }
+
+
+
+
+
+                // ... 其他函数保持不变
 
                 function dragged(event, d) {
-
 
                     // 检查d是否定义，并为其提供一个默认值
                     d = d || { x: 0, y: 0 }; // 如果d是undefined，使用默认值
@@ -2377,36 +2061,255 @@ end`
                     // 更新虚线框的位置
                     d3.select(this).attr("x", parseFloat(d3.select(this).attr("x")) + dx)
                         .attr("y", parseFloat(d3.select(this).attr("y")) + dy);
+
+                    makeLine(this, { dx: event.dx, dy: event.dy }, event);
                 }
+
+
                 function removeHighlight() {
                     d3.selectAll('.highlighted').classed('highlighted', false);
                     d3.select('#highlighted-border').remove();
                     d3.selectAll('.resize-handle').remove();
-                    this.setState({ onclickElement: null })
+                    // this.setState({ onclickElement: null })
                 }
 
-                function dragended(event) {
+                const dragended = (event) => {
                     const dragBox = d3.select('#highlighted-border');
                     const boxX = parseFloat(dragBox.attr('x'));
                     const boxY = parseFloat(dragBox.attr('y'));
                     const boxWidth = parseFloat(dragBox.attr('width'));
                     const boxHeight = parseFloat(dragBox.attr('height'));
+                    d3.select('#auxiliary-line').remove();
+
+                    const isVertical = d3.select(clickedElement.node()).attr('type') === 'node';
+                    const positionX = isVertical ? boxX + boxWidth / 2 : null;  // 如果是垂直辅助线，则计算 positionX
+                    const positionY = !isVertical ? boxY + boxHeight / 2 : null; // 如果是水平辅助线，则计算 positionY
+                    const id = clickedElement.node().getAttribute('id');
+                    const dom = d3_select(`text[id=${id}]`).node().textContent;
+                    const str = `participant ${dom}`
+
+
+                    if (text.includes(str)) {
+                        findClosestElements(positionX, positionY);
+                    } else if (positionX == null) {
+                        findClosestElements(positionX, positionY);
+                    }
 
 
                     removeHighlight();
+                    this.moveDom(str, clickedElement)
                 }
 
             }
+
 
         } catch (error) {
 
         }
 
     }
+    moveDom = (dom, clickNode) => {
+        //竪綫輔助綫
+        let str = this.props.EditorText.split("\n");
+        console.log(this.state.closstLeft, this.state.closstRight, this.state.closstTop, this.state.closstBottom)
+        if (this.state.closstLeft != null && this.state.closstRight != null) {
 
-    makeLine = () => {
-        console.log("pp")
+            const Dom1 = this.state.closstLeft.getAttribute("id")
+            const Dom2 = this.state.closstRight.getAttribute("id")
 
+            let nodeName1 = d3.select(`text[id = ${Dom1}]`).node().textContent
+            let nodeName2 = d3.select(`text[id = ${Dom2}]`).node().textContent
+
+
+            str = str.filter(item => item !== dom);
+            let index1 = str.findIndex(item => item.includes(nodeName1));
+            let index2 = str.findIndex(item => item.includes(nodeName2));
+
+            if (index1 !== -1 && index2 !== -1 && index1 < index2) {
+                // 在 text2 之前插入 text3
+                str.splice(index2, 0, dom);
+            }
+            const newText = str.join("\n")
+            this.props.witreToEdit(newText)
+            this.setState({
+                closstLeft: null,
+                closstRight: null,
+                closstTop: null,
+                closstBottom: null
+            })
+
+        } else if (this.state.closstLeft != null && this.state.closstRight == null) {
+            str = str.filter(item => item !== dom);
+            str.splice(str.length - 1, 0, dom);
+            const newText = str.join("\n")
+            this.props.witreToEdit(newText)
+
+            this.setState({
+                closstLeft: null,
+                closstRight: null,
+                closstTop: null,
+                closstBottom: null
+            })
+        }
+        //橫向輔助綫
+        else if (this.state.closstTop != null && this.state.closstBottom != null) {
+
+            const Dom1 = this.state.closstTop.getAttribute("id")
+            const Dom2 = this.state.closstBottom.getAttribute("id")
+
+            let id = clickNode.node().getAttribute("id").split("_")
+            let allNode = d3.selectAll(`[id^=${id[0]}]`).nodes()
+            //找到帶有id帶有ClickNode的
+            let node = [];
+            allNode.forEach(e => {
+                let id = e.getAttribute("id");
+                if (!node.includes(id)) {
+                    node.push(id)
+                }
+
+            })
+            //然後判斷屬於第幾個
+            let index = this.findIndexInArray(node, clickNode.node().getAttribute("id"));
+            //然後去找
+
+            let text = d3.select(`text[id="${clickNode.node().getAttribute("id")}"]`).node().textContent
+            let indexOfText = this.findNthOccurrence(str, clickNode.node().getAttribute("id"), index);
+
+            //獲取所有altrect元素
+            let allAltRect = d3.selectAll(`[id^=altRect]`).nodes()
+            //獲取所有altelse元素
+            let allAltelse = d3.selectAll(`[id^=altesle]`).nodes()
+            //過濾重複元素
+            let newallAltelse = [];
+            allNode.forEach(e => {
+                let id = e.getAttribute("id");
+                if (!newallAltelse.includes(id)) {
+                    newallAltelse.push(id)
+                }
+
+            })
+
+
+
+            if (text === "loop" || text === "alt" || text === "opt") {
+                const x = this.findMatchingLoops(str, text, index, "end");
+                const y = x[index - 1]
+
+
+
+                if (this.state.closstTop.getAttribute("id").includes("altRect")) {
+                    let index = this.findIndexInArray(allAltRect, newallAltelse);
+                    console.log(index)
+
+                } else if (this.state.closstBottom.getAttribute("id").includes("altRect")) {
+
+                } else {
+                    const x = this.findMatchingLoops(str, text, index, "end");
+                    let text1 = d3.select(`text[id="${Dom1}"]`).node().textContent;
+                    let text2 = d3.select(`text[id="${Dom2}"]`).node().textContent;
+                    let arr = str
+
+                    let start = x[index - 1].start;
+                    let end = x[index - 1].end;
+
+
+                    let index1 = arr.findIndex(item => item.includes(text1));
+                    let index2 = arr.findIndex(item => item.includes(text2));
+
+                    const maxIndex = Math.max(index1, index2);
+                    const minIndex = Math.min(index1, index2);
+
+                    // 先保存原本的值
+                    const el1 = arr[start];
+                    const el2 = arr[end];
+
+                    // 從數組中刪除元素
+                    if (start < end) {
+                        arr.splice(end, 1);
+                        arr.splice(start, 1);
+                    } else {
+                        arr.splice(start, 1);
+                        arr.splice(end, 1);
+                    }
+
+                    // 調整索引
+                    let newMaxIndex = maxIndex - (maxIndex > start) - (maxIndex > end);
+                    let newMinIndex = minIndex - (minIndex > start) - (minIndex > end);
+
+                    // 插入元素
+                    if (newMaxIndex === newMinIndex) {
+                        // 如果插入位置相同，則先插入 el2，然後是 el1
+                        arr.splice(newMaxIndex + 1, 0, el2, el1);
+                    } else {
+                        // 插入 el2 到最大索引處
+                        arr.splice(newMaxIndex, 0, el2);
+                        // 插入 el1 到最小索引處
+                        arr.splice(newMinIndex + 1, 0, el1);
+                    }
+                    let newStr = arr.join("\n")
+                    this.props.witreToEdit(newStr)
+                }
+
+            } else {
+
+                const x = this.findMatchingLoops(str, text, index, null);
+
+            }
+
+            let newStr = str;
+
+
+            this.setState({
+                closstLeft: null,
+                closstRight: null,
+                closstTop: null,
+                closstBottom: null
+            })
+
+        }
+
+    }
+
+    ////
+    findMatchingLoops(code, text1, num, text2) {
+        const lines = code
+        const loopStack = [];
+        const loopEndPairs = [];
+
+        lines.forEach((line, index) => {
+            if (line.includes(text1)) {
+                loopStack.push(index);
+            } else if (text2 != null) {
+                if (line.includes(text2) && loopStack.length > 0) {
+                    const start = loopStack.pop();
+                    loopEndPairs.push({ start: start, end: index });
+                }
+
+
+            }
+        });
+
+        return loopEndPairs;
+    }
+
+
+    ////////////
+    //獲取字串在EditorText中的index
+    findNthOccurrence(text, text1, num) {
+        let count = 0;
+        for (let i = 0; i < text.length; i++) {
+            if (text[i].includes(text1)) {
+                count++;
+                if (count === num) {
+                    return i;
+                }
+            }
+        }
+        return -1; // 或者可以根據需要返回其他錯誤提示
+    }
+    findIndexInArray(text, text1) {
+
+        return text.indexOf(text1) + 1;
     }
 
 
@@ -2531,7 +2434,7 @@ end`
                     width = bbox.width;
                     height = edgeThickness;
                     cursor = 'ns-resize';
-                    console.log(x, y)
+
                     break;
                 case 'bottom':
                     x = bbox.x;
@@ -2723,7 +2626,7 @@ end`
         //
         const Dom = ifelse[index].textContent;
         console.log(Dom)
-        console.log(index)
+
         console.log(clicknode)
         console.log(editorText)
         console.log(nodesType)
@@ -2739,12 +2642,25 @@ end`
                 let Dom = d3.selectAll('polygon[id^="edge_"]').nodes();
                 const index = Dom.findIndex(element => element.id === id) + 1;
                 edgecount.push(index)
+            } else if (id.includes("altesle_")) {
+                let Dom = d3.selectAll('rect[id^="altesle_"]').nodes();
+                const { index1, index2 } = this.indTextIndices();
+                edgecount.push(index1, index2)
             }
         }
+
+        //點擊的是第幾個
+        console.log(index)
+        //框住的元素
         console.log(edgecount)
+        const { text1Index, text2Index } = this.findTextIndices(text, Dom, "end", index + 1);
+        console.log(text, text1Index, text2Index, text1Index)
+        const newStr = this.restructureArray(text, text1Index, text2Index, edgecount);
+        console.log(newStr)
+        this.props.witreToEdit(newStr)
 
 
-
+        //
     }
 
 
@@ -2784,11 +2700,88 @@ end`
     }
 
 
+    handleItemClick = (e, data) => {
+        console.log(data.foo);
+    };
+
+    //判斷框住的元素有什麽
+    findTextIndices(text, text1, text2, num) {
+
+        let text1Index = -1;
+        let text2Index = -1;
+        let currentNum = 0;
+        let currentNum1 = 0;
+
+        const lines = text;
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(text1)) {
+                currentNum += 1;
+                if (currentNum === num) {
+                    text1Index = i;
+                    break;
+                }
+            }
+        }
+
+        let num1 = 0;
+        for (var i = text1Index; i < lines.length; i++) {
+            if (lines[i].includes(text2)) {
+                break;
+            } else if (lines[i].includes(text1)) {
+                num1 += 1;
+
+            }
+        }
+        console.log(num1)
+        if (text1Index !== -1) {
+            console.log(text1Index)
+            for (let i = text1Index; i < lines.length; i++) {
+                if (lines[i].includes(text2)) {
+                    currentNum1 += 1;
+                    if (currentNum1 === num1) {
+                        text2Index = i;
+                        break;
+                    }
+                }
+            }
+        }
+        console.log(currentNum1)
+        console.log(text1Index, text2Index)
 
 
 
+        return { text1Index, text2Index }
+    }
+    restructureArray = (text, num1, num2, num3) => {
+        // 獲取用戶輸入
+        console.log(text, num1, num2, num3)
+        let textArray = text;
+
+
+        // 從textArray中提取num3指定的元素
+        const elementsFromNum3 = num3.map(i => textArray[i]);
+
+        // 從原始位置刪除num3指定的元素
+        // 注意：從最大索引開始刪除，避免影響其他元素的索引
+
+
+        // 在num1和num2之間插入elementsFromNum3
+        const insertionIndex = num1 < num2 ? num1 + 1 : num2 + 1;
+        textArray.splice(insertionIndex, 0, ...elementsFromNum3);
+        for (let i = num3.length - 1; i >= 0; i--) {
+            textArray.splice(num3[i], 1);
+        }
+        console.log(textArray)
+        return textArray.join('\n');
+        // 檢查索引有效性
+
+    }
+    findTextindices(text, text1, text2, num) {
+
+    }
 
     render() {
+
         return (
             <div
                 id="editDiv"
@@ -2796,6 +2789,7 @@ end`
                 onDragOver={this.handleDragOver}
                 onDrop={this.handleDrop}
             >
+
                 {this.state.textDoubleClick && (
                     <input
                         ref={this.inputRef}
@@ -2811,6 +2805,17 @@ end`
                 )
 
                 }
+                {this.state.showContextMenu && (
+                    <ContextMenu id="svg_context_menu" style={{ position: 'absolute', top: this.state.yPos, left: this.state.xPos }}>
+                        <MenuItem data={{ item: 'item1' }} onClick={this.handleItemClick}>
+                            菜单项1
+                        </MenuItem>
+                        <MenuItem data={{ item: 'item2' }} onClick={this.handleItemClick}>
+                            菜单项2
+                        </MenuItem>
+                        {/* 其他菜单项 */}
+                    </ContextMenu>
+                )}
             </div>
 
         );

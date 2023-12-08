@@ -1,7 +1,5 @@
 import React from 'react';
 import { module1 } from './utils.js';
-import SequenceDiagram from './SequenceDiagram.js';
-import UseCaseDiagram from './UseCaseDiagram.js';
 class DisplayArea extends React.Component {
     constructor(props) {
         super(props);
@@ -15,7 +13,7 @@ class DisplayArea extends React.Component {
                 edit: true,
                 tree: true,
             },
-            selectedOption: 'SequenceDiagram', // 默认选择 'a'
+            selectedOption: 'ClassDiagram', // 默认选择 'a'
             showErrorMsg: false,
         };
     }
@@ -97,7 +95,7 @@ class DisplayArea extends React.Component {
 
                 <select value={selectedOption} onChange={this.handleSelectChange}>
                     <option value="SequenceDiagram">Sequence Diagram</option>
-                    <option value="UseCaseDiagram">Use Case Diagram</option>
+                    <option value="ClassDiagram">Class Diagram</option>
                 </select>
                 {/* {selectedOption === 'SequenceDiagram' ? <SequenceDiagram /> : <UseCaseDiagram />} */}
             </div>

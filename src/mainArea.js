@@ -3,12 +3,11 @@ import axios from "axios";
 import Editor from "./Editor";
 import Graph from "./Graph";
 import TreeArea from './Tree';
-import parse from "dotparser";
-import { convertJsonToDot } from "./DeleteNode";
-import { parseTreeData } from './Parser';
+import DownloadButton from "./DownLoad";
+
 import { encode } from "plantuml-encoder";
 
-import UseCaseDiagram from "./UseCaseDiagram";
+import ClassDiagram from "./ClassDiagram";
 import ClassTree from "./Class_Tree";
 // import * as data from './dot.json';
 // const getBaseURL = "https://localhost/mykmap/getDot.php";
@@ -73,7 +72,7 @@ class MainArea extends React.Component {
     }
     getShapeText = (text) => {
         this.ediRef.current.insertStringAboveFirstSymbol(text)
-        console.log(text)
+
 
     }
     zhuheyuyan = (text) => {
@@ -94,6 +93,9 @@ class MainArea extends React.Component {
 
         this.ediRef.current.updateAndPrintContent(text1, text2, num)
     }
+    witreToEditor = (text) => {
+        this.ediRef.current.wirteText(text);
+    }
 
 
     /////////
@@ -108,7 +110,7 @@ ${str}
             )
             this.setState({ ImgUrl: `//www.plantuml.com/plantuml/svg/${encode(str)}` })
         }
-        else if (value === "UseCaseDiagram") {
+        else if (value === "ClassDiagram") {
             let str = `class class
 class class01
 class class02
@@ -143,6 +145,7 @@ ${str}
                     data={this.state.dataFromTree}
                     EditorText={this.state.dotSrc}
                     IfElsefunction={this.getAltElse.bind(this)}
+                    witreToEdit={this.witreToEditor.bind(this)}
                 />;
 
                 componentToRender1 = <TreeArea
@@ -150,8 +153,8 @@ ${str}
                 />
 
                 break;
-            case 'UseCaseDiagram':
-                componentToRender = < UseCaseDiagram
+            case 'ClassDiagram':
+                componentToRender = < ClassDiagram
                     ref={this.graphRef}
                     ImgUrl={this.state.ImgUrl}
                     parentFunction={this.graphGettext.bind(this)}
@@ -185,8 +188,8 @@ ${str}
 
                 {/* Edit Panel */}
                 <div className="area" id="editPanelArea">
-                    <p className="title">Edit Panel:
-                    </p>
+                    <p className="title">Edit Panel: <button>DownloadButton</button></p>
+
 
                     {/* <Graph
                         dotSrc={this.state.dotSrc}
