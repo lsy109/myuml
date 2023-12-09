@@ -159,8 +159,10 @@ ${str}
                     ImgUrl={this.state.ImgUrl}
                     parentFunction={this.graphGettext.bind(this)}
                     shapeText={this.getShapeText.bind(this)}
-
-                    data={this.state.dataFromTree} />
+                    EditorText={this.state.dotSrc}
+                    data={this.state.dataFromTree}
+                    witreToEdit={this.witreToEditor.bind(this)}
+                />
                 componentToRender1 = <ClassTree
                     onDataUpdate={this.handleDataFromTree} />
                 break;

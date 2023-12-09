@@ -1,6 +1,6 @@
 import React from 'react';
 import DisplayArea from './Display';
-import MainArea from './MainArea';
+import MainArea from './mainArea';
 
 function StatusBar(props) {
     return (

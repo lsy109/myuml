@@ -16,8 +16,8 @@ class ClassDiagram extends React.Component {
             svgContent: null,
             nodeNum: 0,
             textNum: 0,
-            textDoubleClick: false,
-            inputPosition: { x: 0, y: 0 },
+
+
             textLength: 0,
             inputext: "",
             doubleClickNode1: "",
@@ -39,6 +39,12 @@ class ClassDiagram extends React.Component {
             /////////
             myNode: [],
             svgContainer: null,
+            num: 0,
+            inputPosition: { x: 0, y: 0 },
+            textDoubleClick: false,
+            clickNode: "",
+            clickNodeType: "",
+            editortext: "",
         };
         this.dragging = false;
         this.zoomScale = 1;
@@ -136,9 +142,13 @@ class ClassDiagram extends React.Component {
             // Step 4: Set the modified style back to the SVG element
             svgElement.attr("style", currentStyle);
             this.interval = setInterval(() => {
-                this.setState({ svgContainer: (d3.select(this.containerRef.current)).select('svg') })
+                this.setState({
+                    svgContainer: (d3.select(this.containerRef.current)).select('svg'),
+                    editortext: this.props.EditorText.split("\n")
+                })
                 this.reMakeAllDom(container);
-                this.setState({ nodeNum: 0 });
+                this.setState({ num: 0 });
+
                 clearInterval(this.interval);
             }, 1);
 
@@ -175,7 +185,12 @@ class ClassDiagram extends React.Component {
         this.addBinlk()
     }
 
-    //添加閃爍效果
+    //獲取數字id
+    nodeType = () => {
+        this.setState(prevState => ({ num: prevState.num + 1 }))
+        return this.state.num
+    }
+    //添加rect範圍
     addBinlk = () => {
         const nodes = this.state.myNode;
         for (var i = 0; i < nodes.length; i++) {
@@ -188,8 +203,15 @@ class ClassDiagram extends React.Component {
             //
             let textHeight = 0;
             let textwidth = 0;
+            //
+
+            let node1Y1 = 0;
+            let hh = 0;
+            const nodeNum = this.nodeType()
             for (var j = 0; j < node.length; j++) {
                 const e = node[j];
+                const id = e.getAttribute("id")
+
                 if (e.nodeName === "line") {
                     if (node1 == null) {
                         node1 = e;
@@ -210,20 +232,23 @@ class ClassDiagram extends React.Component {
 
                         const height = node2y1 - node1y1;
                         const width = node1x2 - node1x1;
-                        textHeight = height
+                        textHeight = node1y1
                         textwidth = width
+                        node1Y1 = node2y1;
 
-                        console.log(textHeight)
+                        hh = height
                         //添加rect
 
                         container.append('rect')
-                            .attr('id', `text1`)
+                            .attr('id', `${id}:var:${nodeNum}`)
                             .attr('x', node1x1)
                             .attr('y', node1y1)
                             .attr('height', height)
                             .attr('width', width)
-                            .style('fill', 'red')
-
+                            .style('fill-opacity', 0)
+                            .on('mouseenter', this.getMouseMoveOver.bind(this))
+                            .on('mouseleave', this.getMouseLeave.bind(this))
+                            .on('dblclick', this.getNodeDBclick.bind(this))
 
 
 
@@ -232,7 +257,7 @@ class ClassDiagram extends React.Component {
                         console.log(node3)
                         let node3x = node3.getAttribute("x")
                         let node3y = node3.getAttribute("y")
-                        let node3Height = node3.getAttribute("height") - textHeight
+                        let node3Height = textHeight - node3y
                         let node3Width = node3.getAttribute("width")
 
                         let rect = node3.getBoundingClientRect()
@@ -240,14 +265,30 @@ class ClassDiagram extends React.Component {
                         console.log(leftBottom)
                         console.log(node3x, node3y, node3Height, node3Width)
                         container.append('rect')
-                            .attr('id', `text1`)
+                            .attr('id', `${id}:title:${nodeNum}`)
                             .attr('x', node3x)
                             .attr('y', node3y)
                             .attr('height', node3Height)
                             .attr('width', node3Width)
-                            .style('fill', 'black')
+                            .style('fill-opacity', 0)
+                            .on('mouseenter', this.getMouseMoveOver.bind(this))
+                            .on('mouseleave', this.getMouseLeave.bind(this))
+                            .on('dblclick', this.getNodeDBclick.bind(this))
 
+                        let x1 = node3x;
+                        let y1 = node1Y1;
+                        let hei = node3.getAttribute("height") - node3Height - hh
 
+                        container.append('rect')
+                            .attr('id', `${id}:methods:${nodeNum}`)
+                            .attr('x', x1)
+                            .attr('y', y1)
+                            .attr('height', hei)
+                            .attr('width', node3Width)
+                            .style('fill-opacity', 0)
+                            .on('mouseenter', this.getMouseMoveOver.bind(this))
+                            .on('mouseleave', this.getMouseLeave.bind(this))
+                            .on('dblclick', this.getNodeDBclick.bind(this))
                     }
 
 
@@ -261,6 +302,90 @@ class ClassDiagram extends React.Component {
 
 
     }
+    //鼠標移入格子時的fucntion
+    getMouseMoveOver = (event, d) => {
+        d3.select(event.currentTarget)
+            .style('animation', 'blink 2s infinite');
+
+    }
+    //鼠標移出時取消閃爍
+    getMouseLeave = (event) => {
+        d3.select(event.currentTarget)
+            .style('animation', 'none');
+    }    //添加閃爍效果
+
+    //雙擊時判斷位置
+    getNodeDBclick = (event) => {
+        const nodeid = (event.currentTarget.getAttribute("id")).split(":")
+        const id = nodeid[0]
+        const type = nodeid[1]
+        const x = event.offsetY;
+        const y = event.offsetX;
+        this.setState({
+            inputPosition: { x, y },
+            textDoubleClick: true,
+
+        });
+        console.log(type)
+        const nodes = this.getClickNodeClass(id);
+        if (type === 'title') {
+            this.setState({ clickNodeType: type, clickNode: nodes })
+        } else if (type === 'var') {
+            this.setState({ clickNodeType: type, clickNode: nodes })
+        } else if (type === 'methods') {
+            this.setState({ clickNodeType: type, clickNode: nodes })
+        }
+
+    }
+    //var的function
+    getClickNodeVar = (text, inputValue) => {
+        //點擊的node的text
+        const nodeText = text;
+        //輸框輸入的值
+        const input = inputValue;
+        //獲取index
+        const index = this.findIndex1(nodeText);
+        console.log(text + "var", inputValue)
+
+    }
+    //methods的function
+    getClickNodeMethods = (text, inputValue) => {
+        console.log(text + "methods", inputValue)
+    }
+    //
+    findIndex1 = (text) => {
+        const Editortext = this.state.editortext;
+        let index = 0;
+        for (var i = 0; i < Editortext.length; i++) {
+            const nodetext = Editortext[i]
+            if (nodetext === (`class ${text}{`) || nodetext === (`class ${text}`)) {
+                if (nodetext === (`class ${text}{`)) {
+                    index = i;
+
+                } else if (nodetext === (`class ${text}`)) {
+                    index = i + 1;
+                }
+
+                break;
+
+            }
+        }
+        console.log(Editortext)
+        console.log(index)
+    }
+    findIndex2 = (text)=>{
+
+    }
+
+
+    //尋找點擊的是哪一個class
+    getClickNodeClass = (event) => {
+        const node = d3.select(`g#${event}`);
+        const nodes = node.selectAll("*").nodes();
+        return nodes
+
+    }
+
 
     MouseOver = (event) => {
         //判斷鼠標hover的是哪一個node的id
@@ -451,6 +576,94 @@ class ClassDiagram extends React.Component {
         // 在此處根據 `data` 做你想要的操作，例如將圖片加入到此組件中
     };
 
+    //尋找text在ediotrtext中的位置
+    findTextInEditor = (text, inputValue) => {
+        const Editortext = this.state.editortext
+        for (var i = 0; i < Editortext.length; i++) {
+            const nodetext = Editortext[i]
+            const xx = nodetext.split("\n")
+            if (nodetext === (`class ${text}{`) || nodetext === (`class ${text}`)) {
+                const classText = nodetext;
+                let spaceIndex = classText.indexOf(' ')
+                let firstPart = classText.substring(0, spaceIndex); // 获取第一个空格前的部分
+                let secondPart = classText.substring(spaceIndex + 1); // 获取第一个空格后的部分
+                let str = "";
+                if (secondPart.includes("{")) {
+                    str = `${inputValue} {`;
+                } else {
+                    str = `${inputValue}`
+                }
+                let newText = `${firstPart} ${str}`;
+                Editortext[i] = newText
+                break;
+
+            }
+        }
+        this.props.witreToEdit(Editortext.join("\n"))
+
+    }
+    //將text插入在index的下方
+    insertTextUp = (text, index) => {
+
+
+    }
+
+    //將text插入在index的上方
+    insertTextDown = (text, index) => {
+
+    }
+
+    //input框enter后的function
+    enterKeyInput = (input) => {
+        const EditorText = this.state.editortext;
+        const clicknode = this.state.clickNode;
+
+        let index = [];
+        for (var i = 0; i < clicknode.length; i++) {
+            const id = clicknode[i]
+            if (id.nodeName === "line") {
+                break;
+            } else if (id.nodeName === "text") {
+                index.push(i)
+            }
+        }
+        if (this.state.clickNodeType === "title") {
+            let classtext = clicknode[index[0]].textContent;
+            this.findTextInEditor(classtext, input)
+        } else if (this.state.clickNodeType === "var") {
+            let classtext = clicknode[index[0]].textContent;
+            this.getClickNodeVar(classtext, input)
+
+        } else if (this.state.clickNodeType === "methods") {
+            let classtext = clicknode[index[0]].textContent;
+            this.getClickNodeMethods(classtext, input)
+
+        }
+
+
+
+
+    }
+
+
+
+    inputHandleKeyDown = (event) => {
+        const input = event.target.value
+        if (event.key === 'Enter') {
+            this.setState({
+                textDoubleClick: false
+            })
+
+            if (event.target.value === "") {
+                console.log("kongkong");
+            } else {
+                this.enterKeyInput(input)
+            }
+
+        }
+    }
+
+
 
     render() {
         return (
@@ -462,6 +675,21 @@ class ClassDiagram extends React.Component {
 
 
             >
+                {this.state.textDoubleClick && (
+                    <input
+                        ref={this.inputRef}
+                        type="text"
+                        style={{
+                            position: 'absolute',
+                            top: `${this.state.inputPosition.x}px`,
+                            left: `${this.state.inputPosition.y}px`,
+                            width: '41px'
+                        }}
+                        onKeyDown={this.inputHandleKeyDown}
+                    ></input>
+                )
+
+                }
 
 
             </div>

@@ -571,77 +571,77 @@ footer {
 }
 
 #actor {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\actor.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\actor.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Boundary {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\boundary.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\boundary.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Control {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\control.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\control.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Entity {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\entity.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\entity.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Database {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\database.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\database.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Collections {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\collections.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\collections.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Queue {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\queue.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\queue.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow1 {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\arrow1.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow1.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow2 {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\arrow2.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow2.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow3 {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\arrow3.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow3.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow4 {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\arrow4.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow4.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -649,49 +649,49 @@ footer {
 
 
 #text {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\text.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\text.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 contain #Participant {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\participant.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\participant.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #activate {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\activate.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\activate.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #loop {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\Loop.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Loop.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #alt {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\Alt.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Alt.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #opt {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\Opt.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Opt.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #class {
-    background-image: url(C:\Users\vocal\Desktop\myuml（Hooks）\src\icon\class.png);
+    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\class.png);
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -792,22 +792,17 @@ contain #Participant {
 
 /* ClassDiagram 的 css*/
 @keyframes blink {
-    0% {
-        background-color: transparent;
+
+    0%,
+    100% {
+        fill-opacity: 0.1;
     }
 
     50% {
-        background-color: rgba(128, 128, 128, 0.5);
-    }
-
-    100% {
-        background-color: transparent;
+        fill-opacity: 0.5;
     }
 }
 
-.blinking {
-    animation: blink 1s linear infinite;
-}
 
 
 
