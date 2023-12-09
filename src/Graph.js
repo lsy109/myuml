@@ -52,6 +52,7 @@ class Graph extends React.Component {
         };
 
         this.dragging = false;
+        this.img = null;
         this.zoomScale = 1;
         this.translate = { x: 0, y: 0 };
         this.containerRef = React.createRef();
@@ -2779,6 +2780,53 @@ end`
     findTextindices(text, text1, text2, num) {
 
     }
+
+    downloadSvg = () => {
+        const svgElement = this.containerRef.current;
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'my-svg.svg';  // 自定義文件名
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+    downloadPng = () => {
+        const svg = document.querySelector('svg');
+        const serializer = new XMLSerializer();
+        const svgStr = serializer.serializeToString(svg);
+
+        // 創建一個Blob對象
+        const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+
+        // 創建一個臨時的canvas元素
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+
+            // 創建一個臨時的下載鏈接
+            const a = document.createElement('a');
+            a.download = 'image.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        };
+
+        img.src = url;
+    };
+
 
     render() {
 

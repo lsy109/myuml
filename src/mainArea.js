@@ -33,7 +33,8 @@ class MainArea extends React.Component {
             showErrorMsg: false,
             ImgUrl: "//www.plantuml.com/plantuml/svg/ur800gVy90LTEmN7dCpaL0KhXOpKd9pyOYu0",
             dataFromTree: null,
-            selectedComponent: ''
+            selectedComponent: '',
+            selection: ''
         };
     }
 
@@ -126,10 +127,25 @@ ${str}
         this.setState({ selectedComponent: value })
 
     }
+
+    downLoadSVG = () => {
+        this.graphRef.current.downloadSvg();
+    }
+    downLoadPNG = () => {
+        this.graphRef.current.downloadPng();
+    }
+    downLoadTEXT = () => {
+        this.ediRef.current.downLoadTEXT();
+    }
+    ediRef
+    setSelection = (option) => {
+        this.setState({ selection: option });
+    }
     render() {
         let newNode = this.state.newNode;
         const { selectedComponent } = this.state;
-
+        const { selection } = this.state;
+        const options = ['SVG', 'PNG', 'TEXT'];
         let componentToRender;
         let componentToRender1;
 
@@ -190,7 +206,15 @@ ${str}
 
                 {/* Edit Panel */}
                 <div className="area" id="editPanelArea">
-                    <p className="title">Edit Panel: <button>DownloadButton</button></p>
+                    <p className="title">Edit Panel:
+                        <span className="right-aligned">
+                            <p onClick={this.downLoadPNG}>PNG</p>
+                            <p onClick={this.downLoadSVG}>SVG</p>
+                            <p onClick={this.downLoadTEXT} >TEXT</p>
+
+                        </span>
+
+                    </p>
 
 
                     {/* <Graph

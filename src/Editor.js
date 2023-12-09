@@ -17,7 +17,18 @@ class Editor extends React.Component {
 
         this.props.onTextChange(value);
     }
+    downLoadTEXT = () => {
+        const text = this.aceRef.current.editor.getValue();
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
 
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'editor-content.txt';
+        a.click();
+
+        URL.revokeObjectURL(url);
+    };
     graphChangeText = (value1, value2, value3) => {
         const editor = this.aceRef.current.editor;
         const editText = editor.getValue();

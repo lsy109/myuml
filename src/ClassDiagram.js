@@ -45,11 +45,13 @@ class ClassDiagram extends React.Component {
             clickNode: "",
             clickNodeType: "",
             editortext: "",
+            mouseLeave: false,
         };
         this.dragging = false;
         this.zoomScale = 1;
         this.translate = { x: 0, y: 0 };
 
+        this.line = null; // 用於儲存線條元素
         this.containerRef = React.createRef();
         this.inputRef = React.createRef();
 
@@ -73,7 +75,12 @@ class ClassDiagram extends React.Component {
             this.observer.observe(this.containerRef.current);
 
         }
-
+        const svg = d3.select(this.containerRef.current);
+        this.line = svg.append("line")
+            .style("stroke", "black")
+            .style("stroke-width", 2)
+            .style("stroke-dasharray", "5,5")
+            .style("visibility", "hidden");
 
         // this.setupDragBehavior();
     }
@@ -302,17 +309,80 @@ class ClassDiagram extends React.Component {
 
 
     }
+
+    dragstarted = (event) => {
+
+        var [x, y] = d3.pointer(event, this.containerRef.current);
+
+        this.start.x = x;
+        this.start.y = y;
+        this.line.style("visibility", "visible")
+            .attr("x1", this.start.x)
+            .attr("y1", this.start.y);
+
+        d3.select(this.containerRef.current).on("mousemove", this.mousemoved);
+    }
+    mousemoved = (event) => {
+        var point = d3.pointer(event);
+        this.line.attr("x2", point[0])
+            .attr("y2", point[1]);
+    }
+    dragended = (e) => {
+        d3.select(this.containerRef.current).on("mousemove", null);
+        console.log("dragended")
+    }
     //鼠標移入格子時的fucntion
     getMouseMoveOver = (event, d) => {
+        const id = event.currentTarget.getAttribute("id").split(':')
+        const rectid = id[0].split("_")
+
         d3.select(event.currentTarget)
-            .style('animation', 'blink 2s infinite');
+            .style('animation', 'blink 2s infinite')
+            .on("mousedown", this.dragstarted.bind(this))
+            .on("mouseup", this.dragended.bind(this))
 
     }
     //鼠標移出時取消閃爍
     getMouseLeave = (event) => {
         d3.select(event.currentTarget)
             .style('animation', 'none');
+        this.setState({ mouseLeave: false })
+        if (!this.state.mouseLeave) {
+            var svg = d3.select('svg');
+            svg.selectAll('.arrow-path').remove()
+        };
+
     }    //添加閃爍效果
+
+    createArrow(x, y, rotation, svgNs) {
+        const arrow = document.createElementNS(svgNs, 'path');
+        arrow.setAttribute('d', 'M0 0 L10 5 L0 10 Z'); // 箭头的路径
+        arrow.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation})`);
+        arrow.style.fill = 'rgba(128, 128, 128, 0.5)'; // 半透明灰色
+        return arrow;
+    }
+    //添加箭頭
+    addArrow = (rectid) => {
+        const rect = d3.select(`#${rectid}`)
+        const svgNs = this.state.svgContainer; // SVG 命名空间
+        const rectX = parseFloat(rect.attr('x'));
+        const rectY = parseFloat(rect.attr('y'));
+        const rectWidth = parseFloat(rect.attr('width'));
+        const rectHeight = parseFloat(rect.attr('height'));
+
+        const arrows = [
+            this.createArrow(rectX + rectWidth / 2, rectY, 0, svgNs), // 顶部
+            this.createArrow(rectX + rectWidth, rectY + rectHeight / 2, 90, svgNs), // 右侧
+            this.createArrow(rectX + rectWidth / 2, rectY + rectHeight, 180, svgNs), // 底部
+            this.createArrow(rectX, rectY + rectHeight / 2, 270, svgNs) // 左侧
+        ];
+        const svg = d3.select(rect.node().parentNode);
+        arrows.forEach(arrow => {
+            console.log('Appending arrow:', arrow);
+            svg.node().appendChild(arrow);
+        });
+
+    }
 
     //雙擊時判斷位置
     getNodeDBclick = (event) => {
@@ -326,8 +396,9 @@ class ClassDiagram extends React.Component {
             textDoubleClick: true,
 
         });
-        console.log(type)
+        console.log(nodeid)
         const nodes = this.getClickNodeClass(id);
+        console.log(nodes)
         if (type === 'title') {
             this.setState({ clickNodeType: type, clickNode: nodes })
         } else if (type === 'var') {
@@ -344,25 +415,144 @@ class ClassDiagram extends React.Component {
         //輸框輸入的值
         const input = inputValue;
         //獲取index
-        const index = this.findIndex1(nodeText);
-        console.log(text + "var", inputValue)
+        const { index, str } = this.findIndex1(nodeText);
+        console.log(this.state.editortext)
+        console.log(index, str)
+        if (str === 'no') {
+            let newText = `{
+${inputValue}
+}`
+            this.insertTextDown(newText, index)
+        } else {
+            this.insertTextDown(input, index);
+        }
+
+
 
     }
     //methods的function
     getClickNodeMethods = (text, inputValue) => {
-        console.log(text + "methods", inputValue)
+        const nodeText = text;
+        //輸框輸入的值
+        const input = inputValue;
+        //獲取index
+        const { index, str } = this.findIndex2(nodeText);
+        if (str === "no") {
+            let newText = `{
+${inputValue}()
+}`
+            this.insertTextUp(newText, index);
+        } else {
+
+            let newText = `${inputValue}()`
+            this.insertTextUp(newText, index);
+        }
+
+
+
     }
     //
     findIndex1 = (text) => {
-        const Editortext = this.state.editortext;
+        const text1 = this.state.editortext
+        const Editortext = text1;
+        console.log(Editortext)
         let index = 0;
+        let str = "";
+
+
+        let findText = 0;
+        for (var x = 0; x < Editortext.length; x++) {
+            console.log(Editortext[x].split(' ').length)
+            if (Editortext[x].split(' ').length > 1) {
+                let str = Editortext[x].split(' ');
+                console.log(str[1])
+                if (str[1].includes("{")) {
+
+                    let newStr = str[1].split('{')
+
+                    if (newStr[0] === text) {
+                        findText = x;
+                        break;
+                    }
+
+                } else {
+                    if (str[1] === text) {
+                        findText = x;
+                        break;
+                    }
+                }
+            }
+
+        }
+        const nodeName = Editortext[findText].split(' ')[0]
+        console.log(nodeName)
+
         for (var i = 0; i < Editortext.length; i++) {
             const nodetext = Editortext[i]
-            if (nodetext === (`class ${text}{`) || nodetext === (`class ${text}`)) {
-                if (nodetext === (`class ${text}{`)) {
+
+            if (nodetext === (`${nodeName} ${text}{`) || nodetext === (`${nodeName} ${text}`)) {
+                if (nodetext === (`${nodeName} ${text}{`)) {
+                    index = i;
+                    str = "Has"
+
+                } else if (Editortext[i + 1] === ("{")) {
+                    index = i + 2;
+                    str = "Has"
+                }
+                else if (nodetext === (`${nodeName} ${text}`)) {
+                    index = i + 1;
+                    str = "no"
+                }
+
+                break;
+
+            }
+
+        }
+
+        console.log(str)
+        return { index, str };
+    }
+    findIndex2 = (text) => {
+        const Editortext = this.state.editortext;
+        let index = 0;
+        let index2 = 0;
+        let str = "";
+
+        let findText = 0;
+        for (var x = 0; x < Editortext.length; x++) {
+            console.log(Editortext[x].split(' ').length)
+            if (Editortext[x].split(' ').length > 1) {
+                let str = Editortext[x].split(' ');
+                console.log(str[1])
+                if (str[1].includes("{")) {
+
+                    let newStr = str[1].split('{')
+
+                    if (newStr[0] === text) {
+                        findText = x;
+                        break;
+                    }
+
+                } else {
+                    if (str[1] === text) {
+                        findText = x;
+                        break;
+                    }
+                }
+            }
+
+        }
+        const nodeName = Editortext[findText].split(' ')[0]
+        console.log(nodeName)
+
+        for (var i = 0; i < Editortext.length; i++) {
+            const nodetext = Editortext[i]
+            if (nodetext === (`${nodeName} ${text}{`) || nodetext === (`${nodeName} ${text}`)) {
+                if (nodetext === (`${nodeName} ${text}{`)) {
                     index = i;
 
-                } else if (nodetext === (`class ${text}`)) {
+                } else if (nodetext === (`${nodeName} ${text}`)) {
                     index = i + 1;
                 }
 
@@ -370,136 +560,157 @@ class ClassDiagram extends React.Component {
 
             }
         }
-        console.log(Editortext)
-        console.log(index)
-    }
-    findIndex2 = (text)=>{
+        for (var j = index; j < Editortext.length; j++) {
+
+            if (Editortext[j] === "}") {
+                index2 = j
+                break;
+            }
+        }
+        console.log(index, index2)
+
+        if (index2 === 0) {
+            str = "no"
+            return { index, str };
+        } else {
+            str = "Has"
+            index = index2
+            return { index, str }
+        }
+
 
     }
 
 
     //尋找點擊的是哪一個class
     getClickNodeClass = (event) => {
+
         const node = d3.select(`g#${event}`);
         const nodes = node.selectAll("*").nodes();
+        console.log(node.node())
+        console.log(nodes)
         return nodes
 
     }
 
 
     MouseOver = (event) => {
-        //判斷鼠標hover的是哪一個node的id
+        // 判斷鼠標hover的是哪一個node的id
         // const id = event.target.id.normalize();
-        // //分解id的值，找到特點的id
-        // const nodes = this.state.myNode;
-        // let list = nodes.map(function (element) {
-        //     console.log(element)
-        // })
-        // const id = event.target.id;
-        // const newId = id.split("elem_").join("")
-        // const myRect = d3_select(`rect#${newId}`).node()
-        // console.log(myRect)
-        // const rectBBox = myRect.getBBox();
-
-        // const arrowPositions = {
-        //     up: { x: rectBBox.x + rectBBox.width / 2, y: rectBBox.y },
-        //     down: { x: rectBBox.x + rectBBox.width / 2, y: rectBBox.y + rectBBox.height },
-        //     left: { x: rectBBox.x, y: rectBBox.y + rectBBox.height / 2 },
-        //     right: { x: rectBBox.x + rectBBox.width, y: rectBBox.y + rectBBox.height / 2 }
-        // };
-
-        // var svg = d3.select('svg');
-
-        // // 定义正向箭头
-        // // 定义正向箭头
-        // svg.append('defs').append('marker')
-        //     .attr('id', 'arrowhead')
-        //     .attr('markerUnits', 'userSpaceOnUse')
-        //     .attr('viewBox', '-0 -5 10 10')
-        //     .attr('refX', 5)
-        //     .attr('refY', 0)
-        //     .attr('orient', 'auto')
-        //     .attr('markerWidth', 13)
-        //     .attr('markerHeight', 13)
-        //     .attr('xoverflow', 'visible')
-        //     .append('svg:path')
-        //     .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-        //     .attr('fill', '#000')
-        //     .attr('id', `${newId}`)
-        //     .on("mouseover", this.test)
-        //     // .on("mouseout", this.MouseOut)
-        //     .on("mousedown", this.MouseDown)
-        // // .on("mousemove", this.MouseMove)
-        // // .on("mouseup", this.MouseUp)
-
-        // // 定义反向箭头
-        // svg.append('defs').append('marker')
-        //     .attr('id', 'arrowhead-reverse')
-        //     .attr('markerUnits', 'userSpaceOnUse')
-        //     .attr('viewBox', '0 -5 10 10')
-        //     .attr('refX', 5) // Adjusted refX to reverse the arrowhead
-        //     .attr('refY', 0)
-        //     .attr('orient', 'auto')
-        //     .attr('markerWidth', 13)
-        //     .attr('markerHeight', 13)
-        //     .attr('xoverflow', 'visible')
-        //     .append('svg:path')
-        //     .attr('d', 'M 10,-5 L 0 ,0 L 10,5')
-        //     .attr('fill', '#000')
-        //     .attr('id', `${newId}`)
-        //     .on("mouseover", this.test)
-        //     // .on("mouseout", this.MouseOut)
-        //     .on("mousedown", this.MouseDown)
-        // // .on("mousemove", this.MouseMove)
-        // // .on("mouseup", this.MouseUp)
+        //分解id的值，找到特點的id
+        if (this.state.mouseLeave) {
 
 
+            const nodes = this.state.myNode;
+            let list = nodes.map(function (element) {
+                console.log(element)
+            })
+            // const id = event.target.id;
+            const newId = event
+            const myRect = d3_select(`rect#${newId}`).node()
+            console.log(myRect)
+            const rectBBox = myRect.getBBox();
 
-        // Object.entries(arrowPositions).forEach(([direction, pos]) => {
-        //     let line;
-        //     let arrowAttr = 'marker-end'; // 默认使用 marker-end
-        //     let arrowId = 'arrowhead'; // 默认使用正向箭头
+            const arrowPositions = {
+                up: { x: rectBBox.x + rectBBox.width / 2, y: rectBBox.y },
+                down: { x: rectBBox.x + rectBBox.width / 2, y: rectBBox.y + rectBBox.height },
+                left: { x: rectBBox.x, y: rectBBox.y + rectBBox.height / 2 },
+                right: { x: rectBBox.x + rectBBox.width, y: rectBBox.y + rectBBox.height / 2 }
+            };
 
-        //     switch (direction) {
-        //         case 'up':
-        //             line = { x1: pos.x, y1: pos.y - 10, x2: pos.x, y2: pos.y + 1 };
-        //             arrowAttr = 'marker-start';
-        //             arrowId = 'arrowhead-reverse';
-        //             break;
-        //         case 'down':
-        //             line = { x1: pos.x, y1: pos.y - 1, x2: pos.x, y2: pos.y + 10 };
-        //             break;
-        //         case 'left':
-        //             line = { x1: pos.x - 10, y1: pos.y, x2: pos.x + 1, y2: pos.y };
-        //             arrowAttr = 'marker-start';
-        //             arrowId = 'arrowhead-reverse';
-        //             break;
-        //         case 'right':
-        //             line = { x1: pos.x - 1, y1: pos.y, x2: pos.x + 10, y2: pos.y };
-        //             break;
-        //     }
+            var svg = d3.select('svg');
 
-        //     // 创建路径并应用箭头标记
-        //     svg.append('path')
-        //         .classed('arrow-path', true)
-        //         .attr('d', `M ${line.x1},${line.y1} L${line.x2},${line.y2}`)
-        //         .attr('stroke', 'blue')
-        //         .attr('stroke-width', 7)
-        //         .attr('fill', 'none')
-        //         .attr('id', `${newId}`)
-        //         .attr(arrowAttr, `url(#${arrowId})`)
-        //         .on("mouseover", this.test)
-        //         // .on("mouseout", this.MouseOut)
-        //         .on("mousedown", this.MouseDown)
-        //     // .on("mousemove", this.MouseMove)
-        //     // .on("mouseup", this.MouseUp)
-        // });
+            // 定义正向箭头
+            // 定义正向箭头
+            svg.append('defs').append('marker')
+                .attr('id', 'arrowhead')
+                .attr('markerUnits', 'userSpaceOnUse')
+                .attr('viewBox', '-0 -5 10 10')
+                .attr('refX', 5)
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 13)
+                .attr('markerHeight', 13)
+                .attr('xoverflow', 'visible')
+                .append('svg:path')
+                .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+                .attr('fill', '#000')
+                .attr('id', `${newId}`)
+                .on("mouseover", this.test)
+                .on("mouseout", this.MouseOut)
+                .on("mousedown", this.MouseDown)
+            // .on("mousemove", this.MouseMove)
+            // .on("mouseup", this.MouseUp)
+
+            // 定义反向箭头
+            svg.append('defs').append('marker')
+                .attr('id', 'arrowhead-reverse')
+                .attr('markerUnits', 'userSpaceOnUse')
+                .attr('viewBox', '0 -5 10 10')
+                .attr('refX', 5) // Adjusted refX to reverse the arrowhead
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 13)
+                .attr('markerHeight', 13)
+                .attr('xoverflow', 'visible')
+                .append('svg:path')
+                .attr('d', 'M 10,-5 L 0 ,0 L 10,5')
+                .attr('fill', '#000')
+                .attr('id', `${newId}`)
+                .on("mouseover", this.test)
+                // .on("mouseout", this.MouseOut)
+                .on("mousedown", this.MouseDown)
+            // .on("mousemove", this.MouseMove)
+            // .on("mouseup", this.MouseUp)
 
 
+
+            Object.entries(arrowPositions).forEach(([direction, pos]) => {
+                let line;
+                let arrowAttr = 'marker-end'; // 默认使用 marker-end
+                let arrowId = 'arrowhead'; // 默认使用正向箭头
+
+                switch (direction) {
+                    case 'up':
+                        line = { x1: pos.x, y1: pos.y - 10, x2: pos.x, y2: pos.y + 1 };
+                        arrowAttr = 'marker-start';
+                        arrowId = 'arrowhead-reverse';
+                        break;
+                    case 'down':
+                        line = { x1: pos.x, y1: pos.y - 1, x2: pos.x, y2: pos.y + 10 };
+                        break;
+                    case 'left':
+                        line = { x1: pos.x - 10, y1: pos.y, x2: pos.x + 1, y2: pos.y };
+                        arrowAttr = 'marker-start';
+                        arrowId = 'arrowhead-reverse';
+                        break;
+                    case 'right':
+                        line = { x1: pos.x - 1, y1: pos.y, x2: pos.x + 10, y2: pos.y };
+                        break;
+                }
+
+                // 创建路径并应用箭头标记
+                svg.append('path')
+                    .classed('arrow-path', true)
+                    .attr('d', `M ${line.x1},${line.y1} L${line.x2},${line.y2}`)
+                    .attr('stroke', 'blue')
+                    .attr('stroke-width', 7)
+                    .attr('fill', 'none')
+                    .attr('id', `${newId}`)
+                    .attr(arrowAttr, `url(#${arrowId})`)
+                    .on("mouseover", this.test)
+                    .on("mouseout", this.MouseOut)
+                    .on("mousedown", this.MouseDown)
+                // .on("mousemove", this.MouseMove)
+                // .on("mouseup", this.MouseUp)
+            });
+
+        }
 
 
     }
     test = () => {
+        this.setState({ mouseLeave: true })
         console.log("ll")
     }
 
@@ -510,7 +721,6 @@ class ClassDiagram extends React.Component {
     MouseOut = (evant) => {
         var svg = d3.select('svg');
         svg.selectAll('.arrow-path').remove();
-        console.log("oo")
     }
     MouseMove = (e) => {
         e.preventDefault()
@@ -560,10 +770,46 @@ class ClassDiagram extends React.Component {
         e.preventDefault();
         const data = e.dataTransfer.getData('text/plain');  // 獲取傳遞的字串
         let rect = d3.selectAll(".group");
+        const num = this.nodeType()
         if (data === "Class") {
-            const text = `class class09`
+            const text = `class class${num}`
             this.props.shapeText(text)
 
+        } else if (data === "Annotation") {
+            const text = `annotation Annotation${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Entity") {
+            const text = `entity Entity${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Enum") {
+            const text = `enum Enum${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Exception") {
+            const text = `exception Exception${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Interface") {
+            const text = `interface Interface${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Metaclass") {
+            const text = `metaclass Metaclass${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Protocol") {
+            const text = `protocol Protocol${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Stereotype") {
+            const text = `stereotype Stereotype${num}`
+            this.props.shapeText(text)
+        }
+        else if (data === "Struct") {
+            const text = `struct Struct${num}`
+            this.props.shapeText(text)
         }
         console.log(data)
         // rect.classed("flash", false);
@@ -578,11 +824,36 @@ class ClassDiagram extends React.Component {
 
     //尋找text在ediotrtext中的位置
     findTextInEditor = (text, inputValue) => {
-        const Editortext = this.state.editortext
+        const Editortext = this.state.editortext;
+        let findText = 0;
+        for (var x = 0; x < Editortext.length; x++) {
+            console.log(Editortext[x].split(' ').length)
+            if (Editortext[x].split(' ').length > 1) {
+                let str = Editortext[x].split(' ');
+                console.log(str[1])
+                if (str[1].includes("{")) {
+
+                    let newStr = str[1].split('{')
+
+                    if (newStr[0] === text) {
+                        findText = x;
+                        break;
+                    }
+
+                } else {
+                    if (str[1] === text) {
+                        findText = x;
+                        break;
+                    }
+                }
+            }
+
+        }
+        const nodeName = Editortext[findText].split(' ')[0]
+        console.log(nodeName)
         for (var i = 0; i < Editortext.length; i++) {
             const nodetext = Editortext[i]
-            const xx = nodetext.split("\n")
-            if (nodetext === (`class ${text}{`) || nodetext === (`class ${text}`)) {
+            if (nodetext === (`${nodeName} ${text}{`) || nodetext === (`${nodeName} ${text}`)) {
                 const classText = nodetext;
                 let spaceIndex = classText.indexOf(' ')
                 let firstPart = classText.substring(0, spaceIndex); // 获取第一个空格前的部分
@@ -603,14 +874,24 @@ class ClassDiagram extends React.Component {
 
     }
     //將text插入在index的下方
-    insertTextUp = (text, index) => {
+    insertTextDown = (text, index) => {
+        const EditorText = this.state.editortext;
+        EditorText.splice(index, 0, text);
+        this.props.witreToEdit(EditorText.join("\n"))
+
+
+        // 如果找到匹配的元素
+
 
 
     }
 
     //將text插入在index的上方
-    insertTextDown = (text, index) => {
-
+    insertTextUp = (text, index) => {
+        const EditorText = this.state.editortext;
+        EditorText.splice(index, 0, text);
+        this.props.witreToEdit(EditorText.join("\n"))
+        console.log(EditorText)
     }
 
     //input框enter后的function
