@@ -48,7 +48,13 @@ class Graph extends React.Component {
 
             showContextMenu: false,
             xPos: 0,
-            yPos: 0
+            yPos: 0,
+            svgContainer: null,
+
+            //綫頭拖拽
+            line: null,
+            arrow: null,
+            resetLine: null,
         };
 
         this.dragging = false;
@@ -162,7 +168,7 @@ class Graph extends React.Component {
                     yPos: event.pageY
                 });
                 // 假設您的ContextMenuTrigger的id是'svg_context_menu'
-                this.contextMenuTrigger.collect("svg_context_menu");
+                // this.contextMenuTrigger.collect("svg_context_menu");
             });
 
 
@@ -175,9 +181,10 @@ class Graph extends React.Component {
             // Step 4: Set the modified style back to the SVG element
             svgElement.attr("style", currentStyle);
             this.interval = setInterval(() => {
+
                 this.reMakeAllDom(container);
                 this.getDomInEditor(container);
-                this.setState({ nodeNum: 0 });
+                this.setState({ nodeNum: 0, svgContainer: container, });
                 clearInterval(this.interval);
             }, 1);
 
@@ -953,6 +960,12 @@ class Graph extends React.Component {
 
         container.on("click", this.resetAllBoolean.bind(this));
         container.selectAll("svg").on("wheel", this.mouseWheel.bind(this));
+        // container.selectAll('text[id^="edge_"], line[id^="arrow_"],text[id^="edge_"], line[id^="arrow_"]').on("click", this.polygon.bind(this))
+        // container.selectAll('polygon').on("mouseenter", function () { d3.select(this).style('cursor', 'crosshair'); })
+        // container.selectAll('polygon').on("mousedown", this.polygonDrog.bind(this))
+        // container.selectAll('polygon').on("mouseup", this.polygonDrogend1.bind(this))
+        // container.selectAll('.rectLine').on("mouseup", this.polygonDrogend.bind(this))
+
         container.selectAll("*").on("click", this.DomLine);
 
         //右鍵
@@ -1377,6 +1390,66 @@ class Graph extends React.Component {
         }
     }
 
+    ////polygon拖拽
+    polygonDrog = (e) => {
+        const svg = (d3.select(this.containerRef.current)).select('svg');
+        //獲取line元素
+        const elementID = e.target.getAttribute("id");
+        let line = svg.selectAll(`line[id = ${elementID}]`);
+        let arrow = svg.selectAll(`polygon[id = ${elementID}]`);
+        this.setState({ line: line, arrow: arrow, resetLine: line })
+        svg.on("mousemove", this.mousemoved);
+        svg.on("mouseup", this.polygonDrogend);
+    }
+    //拖拽結束
+    polygonDrogend = (e) => {
+        (d3.select(this.containerRef.current)).select('svg').on("mousemove", null);
+        let rectline = this.state.svgContainer.selectAll(".rectLine");
+        rectline.attr("pointer-events", "auto");
+        rectline.classed("flash", false);
+
+        const line = this.state.line;
+        const resetLine = this.state.resetLine;
+
+        const resetx = resetLine.attr("x2");
+        const resety = resetLine.attr("y2");
+
+        line
+            .attr('x2', resetx)
+            .attr('y2', resety)
+
+        console.log(e.target)
+
+
+    }
+    polygonDrogend1 = (e) => {
+        this.state.svgContainer.on("mousemove", null);
+        let line = this.state.svgContainer.selectAll(".rectLine");
+        line.attr("pointer-events", "auto");
+        line.classed("flash", false);
+    }
+    //鼠標開始拖拽
+    mousemoved = (event) => {
+        let rectline = this.state.svgContainer.selectAll(".rectLine");
+        rectline.attr("pointer-events", "auto");
+        rectline.classed("flash", true);
+        const [x, y] = d3.pointer(event);
+        const line = this.state.line;
+        const polygon = this.state.arrow;
+        console.log(x)
+        const svg = (d3.select(this.containerRef.current)).select('svg');
+
+        line.attr('x2', x)
+            .attr('y2', y)
+
+
+    }
+
+    //
+    writeFunction = (node1, node2) => {
+
+    }
+
     //判斷箭頭的方向
     // arrow = (event) => {
     //     let text = "";
@@ -1396,19 +1469,22 @@ class Graph extends React.Component {
 
     // }
 
-    sendDataToParent = (e) => {
-        const editortext = this.props.EditorText.split('\n');
-        console.log(editortext)
-        console.log(this.state.beforeText)
-        console.log(e)
-        //先找到位置
-        for (var i = 0; i < editortext.length; i++) {
-            const text  = editortext.split(':')
+    sendDataToParent = (event) => {
+        console.log(event.target.value)
+        if (this.state.doubleClickNode1 != null && this.state.doubleClickNode2 != null) {
 
+            // this.state.doubleClickNode1.text(event.target.value);
+            // this.state.doubleClickNode2.text(event.target.value);
+            this.setState({
+                inputext: event.target.value
+            })
+        } else {
+            // this.state.doubleClickNode1.text(event.target.value);
+            this.setState({
+                inputext: event.target.value
+            })
 
         }
-
-
     }
     //當輸入完后點擊enter
     inputHandleKeyDown = (event) => {
@@ -1423,7 +1499,7 @@ class Graph extends React.Component {
             } else {
 
                 console.log(event.target.value)
-                this.sendDataToParent(event.target.value)
+                this.sendDataToParent(event)
             }
 
         }
@@ -1844,6 +1920,51 @@ end`
     removeResizeHandles = () => {
         d3.selectAll('.resize-handle').remove();
     };
+
+
+    //新的為元素添加添加虛綫框（綫條）
+    polygon = (event) => {
+        const container = (d3.select(this.containerRef.current)).select('svg')
+        // 
+        //獲取點擊元素的id
+        const getEventID = event.target.getAttribute("id");
+        const clickArrow = container.selectAll(`[id="${getEventID}"]`).nodes();
+        let x = 0;
+        let y = 0;
+        let height = 0;
+        let width = 0;
+        for (var i = 0; i < clickArrow.length; i++) {
+            const element = clickArrow[i];
+            console.log(element)
+            if (element.nodeName === "line") {
+
+                if (container.select(`text[id="${getEventID}"]`).node()) {
+                    const textElement = container.select(`text[id="${getEventID}"]`).node();
+                    x = parseFloat(element.getAttribute("x1"));
+                    y = parseFloat(textElement.getAttribute("y"));
+                    width = parseFloat(element.getAttribute("x2")) - x - 8;
+                    const texty = parseFloat(textElement.getAttribute("x"));
+                    height = texty - parseFloat(element.getAttribute("x1"));
+
+                }
+
+            }
+
+        }
+        container.append('rect')
+            .attr('id', `xx`)
+            .attr('x', x)
+            .attr('y', y)
+            .attr('height', 8)
+            .attr('width', width)
+            .style('fill', 'none')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px')
+            .style('stroke-dasharray', '5,2')
+        console.log(x, y, height, width)
+
+    }
+
 
     //為元素添加虛綫框
     DomLine = (event) => {
@@ -2542,7 +2663,7 @@ end`
             const id = this.id
             if (!nodesType.includes(id)) {
                 // 如果不存在，則添加到陣列中
-                console.log(id.includes('altRect_'))
+
                 if (!id.includes(`${selectElement}`)) {
                     if (id.includes('altRect_')) {
 
@@ -2616,6 +2737,7 @@ end`
     //判斷框内的元素要如何定義
     //點擊的元素，框内的元素，editor字串
     EditorTextNode = (clicknode, nodesType, editorText) => {
+        console.log(nodesType)
         let text = editorText;
         let ifElse = ["loop", "alt", "opt"];
         let end = ["end"];
@@ -2634,11 +2756,7 @@ end`
         const index = ifelse.findIndex(element => element.id === clicknode);
         //
         const Dom = ifelse[index].textContent;
-        console.log(Dom)
 
-        console.log(clicknode)
-        console.log(editorText)
-        console.log(nodesType)
         //判斷editorText要如何變更
         const edittext = editorText;
         const num = 0;
@@ -2653,7 +2771,7 @@ end`
                 edgecount.push(index)
             } else if (id.includes("altesle_")) {
                 let Dom = d3.selectAll('rect[id^="altesle_"]').nodes();
-                const { index1, index2 } = this.indTextIndices();
+                const { index1, index2 } = this.findTextIndices();
                 edgecount.push(index1, index2)
             }
         }
@@ -2710,7 +2828,7 @@ end`
 
 
     handleItemClick = (e, data) => {
-        console.log(data.foo);
+
     };
 
     //判斷框住的元素有什麽
@@ -2741,9 +2859,7 @@ end`
 
             }
         }
-        console.log(num1)
         if (text1Index !== -1) {
-            console.log(text1Index)
             for (let i = text1Index; i < lines.length; i++) {
                 if (lines[i].includes(text2)) {
                     currentNum1 += 1;
@@ -2754,19 +2870,11 @@ end`
                 }
             }
         }
-        console.log(currentNum1)
-        console.log(text1Index, text2Index)
-
-
-
         return { text1Index, text2Index }
     }
     restructureArray = (text, num1, num2, num3) => {
-        // 獲取用戶輸入
-        console.log(text, num1, num2, num3)
+        // 獲取用戶輸入 
         let textArray = text;
-
-
         // 從textArray中提取num3指定的元素
         const elementsFromNum3 = num3.map(i => textArray[i]);
 
@@ -2780,7 +2888,6 @@ end`
         for (let i = num3.length - 1; i >= 0; i--) {
             textArray.splice(num3[i], 1);
         }
-        console.log(textArray)
         return textArray.join('\n');
         // 檢查索引有效性
 

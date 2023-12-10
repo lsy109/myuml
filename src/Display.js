@@ -13,7 +13,7 @@ class DisplayArea extends React.Component {
                 edit: true,
                 tree: true,
             },
-            selectedOption: 'ClassDiagram', // 默认选择 'a'
+            selectedOption: 'SequenceDiagram', // 默认选择 'a'
             showErrorMsg: false,
         };
     }
