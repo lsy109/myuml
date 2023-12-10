@@ -75,7 +75,8 @@ class ClassDiagram extends React.Component {
             this.observer.observe(this.containerRef.current);
 
         }
-        const svg = d3.select(this.containerRef.current);
+        const svg = (d3.select(this.containerRef.current)).select('svg');
+        // 假設 containerRef 是你的 SVG 容器的引用
         this.line = svg.append("line")
             .style("stroke", "black")
             .style("stroke-width", 2)
@@ -310,27 +311,52 @@ class ClassDiagram extends React.Component {
 
     }
 
-    dragstarted = (event) => {
+    dragstarted(event) {
+        const svgRect = this.containerRef.current.getBoundingClientRect();
+        const svg = this.state.svgContainer
 
-        var [x, y] = d3.pointer(event, this.containerRef.current);
+        // 计算鼠标在SVG容器中的位置
+        const x = event.clientX - svgRect.left;
+        const y = event.clientY - svgRect.top * 2 - window.scrollY;
+        console.log(x, y)
 
-        this.start.x = x;
-        this.start.y = y;
-        this.line.style("visibility", "visible")
-            .attr("x1", this.start.x)
-            .attr("y1", this.start.y);
+        // 创建线条元素
+        this.line = svg.append("line")
+            .style("stroke", "black")
+            .style("stroke-width", 2)
+            .style("stroke-dasharray", "5,5")
+            .style("visibility", "visible")
+            .attr("x1", x)
+            .attr("y1", y)
+            .attr("x2", x)
+            .attr("y2", y);
 
-        d3.select(this.containerRef.current).on("mousemove", this.mousemoved);
+        // 添加 mousemove 监听器
+        svg.on("mousemove", this.mousemoved);
     }
+
     mousemoved = (event) => {
-        var point = d3.pointer(event);
-        this.line.attr("x2", point[0])
-            .attr("y2", point[1]);
+
+        const svgRect = this.containerRef.current.getBoundingClientRect();
+
+        // 计算鼠标在SVG容器中的位置
+        const x = event.clientX - svgRect.left;
+        const y = event.clientY - svgRect.top * 2 - window.scrollY;
+        this.line
+            .attr("x2", x)
+            .attr("y2", y);
     }
-    dragended = (e) => {
-        d3.select(this.containerRef.current).on("mousemove", null);
-        console.log("dragended")
+
+    dragended(event) {
+        // 隱藏線條
+        this.state.svgContainer.on("mousemove", null);
+
+        // 隐藏线条
+        if (this.line) {
+            this.line.style("visibility", "hidden");
+        }
     }
+
     //鼠標移入格子時的fucntion
     getMouseMoveOver = (event, d) => {
         const id = event.currentTarget.getAttribute("id").split(':')
@@ -354,35 +380,7 @@ class ClassDiagram extends React.Component {
 
     }    //添加閃爍效果
 
-    createArrow(x, y, rotation, svgNs) {
-        const arrow = document.createElementNS(svgNs, 'path');
-        arrow.setAttribute('d', 'M0 0 L10 5 L0 10 Z'); // 箭头的路径
-        arrow.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation})`);
-        arrow.style.fill = 'rgba(128, 128, 128, 0.5)'; // 半透明灰色
-        return arrow;
-    }
-    //添加箭頭
-    addArrow = (rectid) => {
-        const rect = d3.select(`#${rectid}`)
-        const svgNs = this.state.svgContainer; // SVG 命名空间
-        const rectX = parseFloat(rect.attr('x'));
-        const rectY = parseFloat(rect.attr('y'));
-        const rectWidth = parseFloat(rect.attr('width'));
-        const rectHeight = parseFloat(rect.attr('height'));
 
-        const arrows = [
-            this.createArrow(rectX + rectWidth / 2, rectY, 0, svgNs), // 顶部
-            this.createArrow(rectX + rectWidth, rectY + rectHeight / 2, 90, svgNs), // 右侧
-            this.createArrow(rectX + rectWidth / 2, rectY + rectHeight, 180, svgNs), // 底部
-            this.createArrow(rectX, rectY + rectHeight / 2, 270, svgNs) // 左侧
-        ];
-        const svg = d3.select(rect.node().parentNode);
-        arrows.forEach(arrow => {
-            console.log('Appending arrow:', arrow);
-            svg.node().appendChild(arrow);
-        });
-
-    }
 
     //雙擊時判斷位置
     getNodeDBclick = (event) => {
