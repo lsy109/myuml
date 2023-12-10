@@ -8,7 +8,7 @@ class Index extends React.Component {
         return (
             <div className="window">
                 <nav>
-                    <label className="logo">myUML <label className="version">v20230918</label>
+                    <label className="logo">myUML <label className="version">v20231210</label>
                     </label>
                     <Menu />
                     <div id="searchDiv">

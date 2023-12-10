@@ -87,7 +87,7 @@ class DisplayArea extends React.Component {
                     checked={area.tree}
                     onChange={this.handleChange}
                 />
-                <label className="display-label" htmlFor="cb_2">Tree</label>
+                <label className="display-label" htmlFor="cb_2">SideBar</label>
                 <span
                     className='errorMsg'
                     style={{ display: `${this.state.showErrorMsg ? 'inline' : 'none'}` }}

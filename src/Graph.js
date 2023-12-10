@@ -1140,10 +1140,8 @@ class Graph extends React.Component {
 
 
     textHandleDoubleClick = (element) => {
-        console.log(element)
         // if (element.currentTarget.getAttribute("type") === "node") { }
         const point = d3.pointer(element)
-
         this.setState({ inputext: "" })
         const container = d3.select(this.containerRef.current);
         // const x = element.target.y.animVal[0].value;
@@ -1174,8 +1172,6 @@ class Graph extends React.Component {
 
                 console.log(nodeText1, nodeText2)
                 if (nodeText1 === nodeText2) {
-
-
                     node1 = `node_${num}`;
                     node2 = `node_${num + 1}`;
                     const nodes1 = container.select(`text#${node1}`);
@@ -1400,22 +1396,34 @@ class Graph extends React.Component {
 
     // }
 
+    sendDataToParent = (e) => {
+        const editortext = this.props.EditorText.split('\n');
+        console.log(editortext)
+        console.log(this.state.beforeText)
+        console.log(e)
+        //先找到位置
+        for (var i = 0; i < editortext.length; i++) {
+            const text  = editortext.split(':')
+
+
+        }
+
+
+    }
     //當輸入完后點擊enter
     inputHandleKeyDown = (event) => {
         if (event.key === 'Enter') {
             this.setState({
                 textDoubleClick: false
             })
-
             if (event.target.value === "") {
                 console.log("kongkong");
             } else if (this.state.ifElse) {
                 this.props.IfElsefunction(this.state.ifElseText, ` ${event.target.value}`, 1)
             } else {
 
-                this.sendDataToParent(event)
-
-
+                console.log(event.target.value)
+                this.sendDataToParent(event.target.value)
             }
 
         }

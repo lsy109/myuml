@@ -96,7 +96,7 @@ class ClassTree extends React.Component {
         const { submenuAExpanded, submenuBExpanded, submenuCExpanded } = this.state;
         return (
             <div className="area" id="treeArea">
-                <p className="title">Shape:</p>
+                <p className="title">SideBar:</p>
                 <div id="shape">
                     <div className="menu" onClick={() => this.toggleSubmenu('submenuAExpanded')}>Nodes</div>
                     <div className={`submenu ${submenuAExpanded ? 'expanded' : ''}`}>
