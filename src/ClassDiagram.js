@@ -25,8 +25,7 @@ class ClassDiagram extends React.Component {
             arrow: "",
             beforeText: "",
             arrowClick: true,
-            contextMenuX: 0,
-            contextMenuY: 0,
+
             //獲取Edit Panel的實時大小
             dimensions: {
                 width: 0,
@@ -46,6 +45,9 @@ class ClassDiagram extends React.Component {
             clickNodeType: "",
             editortext: "",
             mouseLeave: false,
+            //畫連接綫時的儲存
+            clickNode1: null,
+            clickNode2: null,
         };
         this.dragging = false;
         this.zoomScale = 1;
@@ -195,8 +197,13 @@ class ClassDiagram extends React.Component {
 
     //獲取數字id
     nodeType = () => {
+        console.log(this.state.num)
         this.setState(prevState => ({ num: prevState.num + 1 }))
         return this.state.num
+    }
+    TextNum = () => {
+        this.setState(prevState => ({ textNum: prevState.textNum + 1 }))
+        return this.state.textNum
     }
     //添加rect範圍
     addBinlk = () => {
@@ -312,13 +319,12 @@ class ClassDiagram extends React.Component {
     }
 
     dragstarted(event) {
-        const svgRect = this.containerRef.current.getBoundingClientRect();
         const svg = this.state.svgContainer
 
+        // const myRect = d3_select(`rect#${newId}`).node()
         // 计算鼠标在SVG容器中的位置
-        const x = event.clientX - svgRect.left;
-        const y = event.clientY - svgRect.top * 2 - window.scrollY;
-        console.log(x, y)
+        const [x, y] = d3.pointer(event);
+
 
         // 创建线条元素
         this.line = svg.append("line")
@@ -331,6 +337,7 @@ class ClassDiagram extends React.Component {
             .attr("x2", x)
             .attr("y2", y);
 
+        this.setState({ clickNode1: event });
         // 添加 mousemove 监听器
         svg.on("mousemove", this.mousemoved);
     }
@@ -340,8 +347,7 @@ class ClassDiagram extends React.Component {
         const svgRect = this.containerRef.current.getBoundingClientRect();
 
         // 计算鼠标在SVG容器中的位置
-        const x = event.clientX - svgRect.left;
-        const y = event.clientY - svgRect.top * 2 - window.scrollY;
+        const [x, y] = d3.pointer(event);
         this.line
             .attr("x2", x)
             .attr("y2", y);
@@ -351,10 +357,34 @@ class ClassDiagram extends React.Component {
         // 隱藏線條
         this.state.svgContainer.on("mousemove", null);
 
+        this.linkClass(event);
+        console.log(event.target)
         // 隐藏线条
         if (this.line) {
             this.line.style("visibility", "hidden");
         }
+
+    }
+
+    //連接兩個class
+    linkClass = (e) => {
+        //點擊的node和停止拖拽的node
+        const editorText = this.state.editortext;
+        const node1 = this.state.clickNode1.target.getAttribute("id").split(":");
+        const node2 = e.target.getAttribute("id").split(":")
+        //如果兩個type是一樣的
+        if (node1[1] === node2[1]) {
+            const text1 = node1[0].split("_");
+            const text2 = node2[0].split("_");
+
+            const newText = `${text1[1]} -> ${text2[1]}`;
+            let index = editorText.length - 1;
+
+            editorText.splice(index, 0, newText)
+            this.props.witreToEdit(editorText.join("\n"))
+
+        }
+
     }
 
     //鼠標移入格子時的fucntion
@@ -768,45 +798,46 @@ ${inputValue}()
         e.preventDefault();
         const data = e.dataTransfer.getData('text/plain');  // 獲取傳遞的字串
         let rect = d3.selectAll(".group");
-        const num = this.nodeType()
+
+
         if (data === "Class") {
-            const text = `class class${num}`
+            const text = `class class${this.TextNum()}`
             this.props.shapeText(text)
 
         } else if (data === "Annotation") {
-            const text = `annotation Annotation${num}`
+            const text = `annotation Annotation${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Entity") {
-            const text = `entity Entity${num}`
+            const text = `entity Entity${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Enum") {
-            const text = `enum Enum${num}`
+            const text = `enum Enum${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Exception") {
-            const text = `exception Exception${num}`
+            const text = `exception Exception${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Interface") {
-            const text = `interface Interface${num}`
+            const text = `interface Interface${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Metaclass") {
-            const text = `metaclass Metaclass${num}`
+            const text = `metaclass Metaclass${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Protocol") {
-            const text = `protocol Protocol${num}`
+            const text = `protocol Protocol${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Stereotype") {
-            const text = `stereotype Stereotype${num}`
+            const text = `stereotype Stereotype${this.TextNum()}`
             this.props.shapeText(text)
         }
         else if (data === "Struct") {
-            const text = `struct Struct${num}`
+            const text = `struct Struct${this.TextNum()}`
             this.props.shapeText(text)
         }
         console.log(data)
@@ -877,10 +908,7 @@ ${inputValue}()
         EditorText.splice(index, 0, text);
         this.props.witreToEdit(EditorText.join("\n"))
 
-
         // 如果找到匹配的元素
-
-
 
     }
 
