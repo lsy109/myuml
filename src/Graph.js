@@ -2658,21 +2658,18 @@ end`
         const element = nodes;
         const selectElement = this.state.onclickElement.node().id
         const nodesType = [];
+        console.log(nodesType)
 
         element.each(function () {
             const id = this.id
             if (!nodesType.includes(id)) {
                 // 如果不存在，則添加到陣列中
-
                 if (!id.includes(`${selectElement}`)) {
                     if (id.includes('altRect_')) {
-
                     } else {
                         nodesType.push(id);
                     }
-
                 }
-
             } else {
 
             }
@@ -2737,65 +2734,225 @@ end`
     //判斷框内的元素要如何定義
     //點擊的元素，框内的元素，editor字串
     EditorTextNode = (clicknode, nodesType, editorText) => {
-        console.log(nodesType)
-        let text = editorText;
-        let ifElse = ["loop", "alt", "opt"];
-        let end = ["end"];
-        //判斷有多少個ifelse
-        let totalCount = ifElse.reduce((count, targetString) => {
-            return count + text.filter(item => item === targetString).length;
-        }, 0);
-        let totalCount1 = end.reduce((count, targetString) => {
-            return count + text.filter(item => item === targetString).length;
-        }, 0);
-        //
-        //////
-        //判斷我點擊的是第幾個
-        const ifelse = d3.selectAll('text[id^="altesle_"]').nodes();
-        //這是我點擊的元素的index
-        const index = ifelse.findIndex(element => element.id === clicknode);
-        //
-        const Dom = ifelse[index].textContent;
+        const svg = (d3.select(this.containerRef.current)).select('svg');
+        console.log(clicknode, nodesType, editorText)
+        //所有ifelse元素
+        const ifElseElement = svg.selectAll("rect[id^='altesle']").nodes();
+        //點擊的是第幾個ifelse
+        let ifElseIndex = 0;
+        for (var i = 0; i < ifElseElement.length; i++) {
+            if (ifElseElement[i].getAttribute('id') === clicknode) {
+                ifElseIndex = i + 1;
+                break;
+            }
 
-        //判斷editorText要如何變更
-        const edittext = editorText;
-        const num = 0;
-        let edgecount = [];
-        //判斷edge在text中的位置
-        for (var i = 0; i < nodesType.length; i++) {
-            let id = nodesType[i];
+        }
 
-            if (id.includes("edge_")) {
-                let Dom = d3.selectAll('polygon[id^="edge_"]').nodes();
-                const index = Dom.findIndex(element => element.id === id) + 1;
-                edgecount.push(index)
-            } else if (id.includes("altesle_")) {
-                let Dom = d3.selectAll('rect[id^="altesle_"]').nodes();
-                const { index1, index2 } = this.findTextIndices();
-                edgecount.push(index1, index2)
+        //尋找點擊元素在text中的位置
+        let clickNodeIndex = [];
+        console.log(ifElseIndex)
+        const node11 = svg.select(`text[id='${clicknode}']`).node().textContent;
+        let index1 = 0;
+        let index2 = 0;
+        for (var i = 0; i < editorText.length; i++) {
+            //尋找node11的index
+            if (index1 != ifElseIndex) {
+                if (editorText[i].includes("alt") || editorText[i].includes("loop") || editorText[i].includes("opt")) {
+                    index1 += 1;
+                    console.log("jic")
+                }
+            } else {
+                clickNodeIndex.push(i);
+                break;
+            }
+
+        }
+        for (var i = 0; i < editorText.length; i++) {
+            if (index2 != ifElseIndex) {
+                if (editorText[i] == "end") {
+                    index2 += 1;
+                    console.log("jic")
+                }
+            } else {
+                clickNodeIndex.push(i);
+                break;
             }
         }
 
-        //點擊的是第幾個
-        console.log(index)
-        //框住的元素
-        console.log(edgecount)
-        const { text1Index, text2Index } = this.findTextIndices(text, Dom, "end", index + 1);
-        console.log(text, text1Index, text2Index, text1Index)
-        const newStr = this.restructureArray(text, text1Index, text2Index, edgecount);
-        console.log(newStr)
-        this.props.witreToEdit(newStr)
+
+
+        //框住的元素在text中的index
+        let Elementindex = [];
+        for (var i = 0; i < nodesType.length; i++) {
+            const node = nodesType[i];
+            //尋找框住元素在text的index
+            if (node.includes('edge_')) {
+                const node1 = svg.select(`text[id='${node}']`).node();
+                const text = node1.textContent;
+                for (var j = 0; j < editorText.length; j++) {
+                    if (editorText[j].includes(text)) {
+                        Elementindex.push(j);
+                        break;
+
+                    }
+                }
+            }
+            //判斷特殊字串的index 
+            //被框選的特殊字串
+            else if (node.includes('altesle_')) {
+                //儲存特殊字與end的
+                let indexend = [];
+                const node1 = svg.select(`text[id='${node}']`).node().textContent;
+                console.log(node1)
+                //判斷字串在ifelse是第幾個
+                let x = 0;
+                for (var j = 0; j < ifElseElement.length; j++) {
+                    if (node === ifElseElement[j].getAttribute('id')) {
+                        x = j + 1;
+                        break;
+                    }
+                }
+                //尋找被框選的字串在text的index
+                let y = 0;
+                let z = 0;
+
+                //判斷特數字
+                for (var j = 0; j < editorText.length; j++) {
+
+                    if (x === y) {
+
+                        indexend.push(j)
+                        break;
+                    } else {
+                        if (editorText[j].includes("alt") || editorText[j].includes("loop") || editorText[j].includes("opt")) {
+                            y += 1;
+                        }
+                    }
+                }
+                //判斷end
+                for (var j = 0; j < editorText.length; j++) {
+                    if (x === z) {
+                        indexend.push(j)
+                        break;
+                    } else {
+                        if (editorText[j] === "end") {
+                            z += 1;
+                        }
+                    }
+                }
+                Elementindex.push(indexend)
+
+            }
+        }
+
+
+        //判斷框内元素有什麽
+
+
+        // console.log(nodesType)
+        // let text = editorText;
+        // let ifElse = ["loop", "alt", "opt"];
+        // let end = ["end"];
+        // //判斷有多少個ifelse
+        // let totalCount = ifElse.reduce((count, targetString) => {
+        //     return count + text.filter(item => item === targetString).length;
+        // }, 0);
+        // let totalCount1 = end.reduce((count, targetString) => {
+        //     return count + text.filter(item => item === targetString).length;
+        // }, 0);
+        // //
+        // //////
+        // //判斷我點擊的是第幾個
+        // const ifelse = d3.selectAll('text[id^="altesle_"]').nodes();
+        // //這是我點擊的元素的index
+        // const index = ifelse.findIndex(element => element.id === clicknode);
+        // //
+        // const Dom = ifelse[index].textContent;
+
+        // //判斷editorText要如何變更
+        // const edittext = editorText;
+        // const num = 0;
+        // let edgecount = [];
+        // //判斷edge在text中的位置
+        // for (var i = 0; i < nodesType.length; i++) {
+        //     let id = nodesType[i];
+
+        //     if (id.includes("edge_")) {
+        //         let Dom = d3.selectAll('polygon[id^="edge_"]').nodes();
+        //         const index = Dom.findIndex(element => element.id === id) + 1;
+        //         edgecount.push(index)
+        //     } else if (id.includes("altesle_")) {
+        //         let Dom = d3.selectAll('rect[id^="altesle_"]').nodes();
+        //         const { index1, index2 } = this.findTextIndices(text, Dom, "end", index + 1);
+        //         edgecount.push(index1, index2)
+        //     }
+        // }
+
+        // //點擊的是第幾個
+        // console.log(index)
+        // //框住的元素
+        // console.log(edgecount)
+        // const { text1Index, text2Index } = this.findTextIndices(text, Dom, "end", index + 1);
+        // console.log(text, text1Index, text2Index, text1Index)
+        // const newStr = this.restructureArray(text, text1Index, text2Index, edgecount);
+        // console.log(newStr)
+        // this.props.witreToEdit(newStr)
 
 
         //
+        this.reWriteEditorText(clickNodeIndex, Elementindex, editorText)
     }
 
 
     //根據框住的元素判斷Editor要怎麽寫
     //editor字串，位置，元素
-    reWriteEditorText = (text, num, node) => {
+    reWriteEditorText(clickNodeIndex, Elementindex, editorText) {
+        console.log(clickNodeIndex, Elementindex, editorText)
+        let newIndex = [];
+        let text = editorText;
+        for (var i = 0; i < Elementindex.length; i++) {
+            console.log(typeof Elementindex[i])
+            if (typeof Elementindex[i] === "object") {
+
+                console.log()
+                newIndex.push(Elementindex[i][0] - 1)
+                newIndex.push(Elementindex[i][1] - 1)
+            } else {
+                newIndex.push(Elementindex[i])
+
+            }
+
+        }
+        let max = Math.max(...newIndex);
+        let min = Math.min(...newIndex);
+
+        const copy1 = editorText[clickNodeIndex[0] - 1]
+        const copy2 = editorText[clickNodeIndex[1] - 1]
+        let tempArray = [];
+        for (let i = 0; i < editorText.length; i++) {
+            // 在 min 的上一行插入 copy1
+            if (i === min) {
+                tempArray.push(copy1);
+            }
+            // 在 max 的下一行插入 copy2
+            if (i === max) {
+                tempArray.push(copy2);
+            }
+            // 添加当前行，除非它是 copy1 或 copy2
+            if (i !== clickNodeIndex[0] - 1 && i !== clickNodeIndex[1] - 1) {
+                tempArray.push(editorText[i]);
+            }
+        }
+
+        // 用临时数组替换原始数组
+        editorText = tempArray;
+
+        this.props.witreToEdit(editorText.join('\n'))
+        console.log(editorText)
+
 
     }
+
 
 
     ifelsepDbClick = (event) => {
@@ -2852,6 +3009,7 @@ end`
 
         let num1 = 0;
         for (var i = text1Index; i < lines.length; i++) {
+            console.log(lines[i])
             if (lines[i].includes(text2)) {
                 break;
             } else if (lines[i].includes(text1)) {
