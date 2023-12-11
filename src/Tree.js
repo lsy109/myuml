@@ -150,7 +150,7 @@ class TreeArea extends React.Component {
     renderShapeItem(id, label) {
         return (
             <div className='shapeItem' draggable="true" onDragStart={this.handleDragStart}>
-                <div id={id} className='shapeImage'></div>
+                <div id={id} className='shapeImage' ></div>
                 <span>{label}</span>
             </div>
         );

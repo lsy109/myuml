@@ -592,77 +592,78 @@ footer {
 }
 
 #actor {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\actor.png);
+    background-image: url('./icon/actor.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
+
 #Boundary {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\boundary.png);
+    background-image: url('./icon/boundary.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Control {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\control.png);
+    background-image: url('./icon/control.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Entity {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\entity.png);
+    background-image: url('./icon/entity.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Database {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\database.png);
+    background-image: url('./icon/database.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Collections {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\collections.png);
+    background-image: url('./icon/collections.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Queue {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\queue.png);
+    background-image: url('./icon/queue.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow1 {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow1.png);
+    background-image: url('./icon/arrow1.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow2 {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow2.png);
+    background-image: url('./icon/arrow2.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow3 {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow3.png);
+    background-image: url('./icon/arrow3.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Arrow4 {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\arrow4.png);
+    background-image: url('./icon/arrow4.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -670,112 +671,112 @@ footer {
 
 
 #text {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\text.png);
+    background-image: url('./icon/text.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Participant {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\participant.png);
+    background-image: url('./icon/participant.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #activate {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\activate.png);
+    background-image: url('./icon/activate.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #loop {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Loop.png);
+    background-image: url('./icon/Loop.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #alt {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Alt.png);
+    background-image: url('./icon/Alt.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #opt {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Opt.png);
+    background-image: url('./icon/Opt.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #class {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\class.png);
+    background-image: url('./icon/class.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #annotation {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Annotation.png);
+    background-image: url('./icon/Annotation.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #entity {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\classentity.png);
+    background-image: url('./icon/classentity.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #enum {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Enum.png);
+    background-image: url('./icon/Enum.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #exception {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Exception.png);
+    background-image: url('./icon/Exception.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #interface {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Interface.png);
+    background-image: url('./icon/Interface.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #metaclass {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Metaclass.png);
+    background-image: url('./icon/Metaclass.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #protocol {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Protocol.png);
+    background-image: url('./icon/Protocol.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #Stereotype {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Stereotype.png);
+    background-image: url('./icon/Stereotype.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
 }
 
 #struct {
-    background-image: url(C:\Users\User\Documents\myumlgit2\src\icon\Struct.png);
+    background-image: url('./icon/Struct.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;

@@ -48,6 +48,10 @@ class ClassDiagram extends React.Component {
             //畫連接綫時的儲存
             clickNode1: null,
             clickNode2: null,
+            //鼠標形態
+            mouseType: "",
+            //箭頭形態
+            arrowType: "",
         };
         this.dragging = false;
         this.zoomScale = 1;
@@ -290,6 +294,7 @@ class ClassDiagram extends React.Component {
                             .on('mouseleave', this.getMouseLeave.bind(this))
                             .on('dblclick', this.getNodeDBclick.bind(this))
 
+
                         let x1 = node3x;
                         let y1 = node1Y1;
                         let hei = node3.getAttribute("height") - node3Height - hh
@@ -318,13 +323,17 @@ class ClassDiagram extends React.Component {
 
     }
 
-    dragstarted(event) {
+    dragstarted = (event) => {
         const svg = this.state.svgContainer
-
+        console.log(event)
+        if (event.sourceEvent.type === 'mousedown') {
+            event.sourceEvent.stopPropagation();
+        }
         // const myRect = d3_select(`rect#${newId}`).node()
         // 计算鼠标在SVG容器中的位置
-        const [x, y] = d3.pointer(event);
 
+        const [x, y] = d3.pointer(event);
+        console.log(x, y)
 
         // 创建线条元素
         this.line = svg.append("line")
@@ -337,31 +346,39 @@ class ClassDiagram extends React.Component {
             .attr("x2", x)
             .attr("y2", y);
 
-        this.setState({ clickNode1: event });
+        this.setState({ clickNode1: event.sourceEvent.target });
         // 添加 mousemove 监听器
-        svg.on("mousemove", this.mousemoved);
+        // svg.on("mousemove", this.mousemoved);
     }
 
     mousemoved = (event) => {
-
-        const svgRect = this.containerRef.current.getBoundingClientRect();
-
         // 计算鼠标在SVG容器中的位置
-        const [x, y] = d3.pointer(event);
-        this.line
-            .attr("x2", x)
-            .attr("y2", y);
+        const clickx = this.state.clickNode1.getAttribute('x1')
+        const clicky = this.state.clickNode1.getAttribute('y1')
+
+        const x = event.x
+        const y = event.y
+
+        if (clickx - x > 10 || clickx - x < 10) {
+            this.setState({ mouseType: "move" })
+            this.line
+                .attr("x2", x)
+                .attr("y2", y)
+        } else {
+            this.setState({ mouseType: "click" })
+        }
+
     }
 
-    dragended(event) {
+    dragended = (event) => {
         // 隱藏線條
-        this.state.svgContainer.on("mousemove", null);
-
-        this.linkClass(event);
-        console.log(event.target)
+        // this.state.svgContainer.on("mousemove", null);
         // 隐藏线条
         if (this.line) {
             this.line.style("visibility", "hidden");
+        }
+        if (this.state.mouseType === 'move') {
+            this.linkClass(event);
         }
 
     }
@@ -370,32 +387,45 @@ class ClassDiagram extends React.Component {
     linkClass = (e) => {
         //點擊的node和停止拖拽的node
         const editorText = this.state.editortext;
-        const node1 = this.state.clickNode1.target.getAttribute("id").split(":");
-        const node2 = e.target.getAttribute("id").split(":")
+        const node1 = this.state.clickNode1.getAttribute("id").split(":");
+
+
+        console.log(e.sourceEvent.target.getAttribute("id"))
         //如果兩個type是一樣的
-        if (node1[1] === node2[1]) {
-            const text1 = node1[0].split("_");
-            const text2 = node2[0].split("_");
+        if (e.sourceEvent.target.getAttribute("id") === null) {
 
-            const newText = `${text1[1]} -> ${text2[1]}`;
-            let index = editorText.length - 1;
+        } else {
+            const node2 = e.sourceEvent.target.getAttribute("id").split(":");
+            if (node1[1] === node2[1]) {
+                const text1 = node1[0].split("_");
+                const text2 = node2[0].split("_");
 
-            editorText.splice(index, 0, newText)
-            this.props.witreToEdit(editorText.join("\n"))
+                const newText = `${text1[1]} -> ${text2[1]}`;
+                let index = editorText.length - 1;
 
+                editorText.splice(index, 0, newText)
+                this.props.witreToEdit(editorText.join("\n"))
+
+            }
         }
+
 
     }
 
     //鼠標移入格子時的fucntion
     getMouseMoveOver = (event, d) => {
         const id = event.currentTarget.getAttribute("id").split(':')
-        const rectid = id[0].split("_")
+        const rectid = id[0].split("_");
+        this.setState({ mouseType: "" })
+
+        var drag = d3.drag()
+            .on("start", this.dragstarted.bind(this)) // 拖拽开始时的事件处理器
+            .on("drag", this.mousemoved.bind(this))      // 拖拽进行中的事件处理器
+            .on("end", this.dragended.bind(this));    // 拖拽结束后的事件处理器
 
         d3.select(event.currentTarget)
             .style('animation', 'blink 2s infinite')
-            .on("mousedown", this.dragstarted.bind(this))
-            .on("mouseup", this.dragended.bind(this))
+            .call(drag)
 
     }
     //鼠標移出時取消閃爍
@@ -414,6 +444,7 @@ class ClassDiagram extends React.Component {
 
     //雙擊時判斷位置
     getNodeDBclick = (event) => {
+        event.stopPropagation();
         const nodeid = (event.currentTarget.getAttribute("id")).split(":")
         const id = nodeid[0]
         const type = nodeid[1]
@@ -572,8 +603,6 @@ ${inputValue}()
 
         }
         const nodeName = Editortext[findText].split(' ')[0]
-        console.log(nodeName)
-
         for (var i = 0; i < Editortext.length; i++) {
             const nodetext = Editortext[i]
             if (nodetext === (`${nodeName} ${text}{`) || nodetext === (`${nodeName} ${text}`)) {
@@ -622,177 +651,63 @@ ${inputValue}()
     }
 
 
-    MouseOver = (event) => {
-        // 判斷鼠標hover的是哪一個node的id
-        // const id = event.target.id.normalize();
-        //分解id的值，找到特點的id
-        if (this.state.mouseLeave) {
 
+    // test = () => {
+    //     this.setState({ mouseLeave: true })
+    //     console.log("ll")
+    // }
 
-            const nodes = this.state.myNode;
-            let list = nodes.map(function (element) {
-                console.log(element)
-            })
-            // const id = event.target.id;
-            const newId = event
-            const myRect = d3_select(`rect#${newId}`).node()
-            console.log(myRect)
-            const rectBBox = myRect.getBBox();
+    // createArrow = (fromX, fromY, toX, toY) => {
+    //     var svg = d3.select('svg');
 
-            const arrowPositions = {
-                up: { x: rectBBox.x + rectBBox.width / 2, y: rectBBox.y },
-                down: { x: rectBBox.x + rectBBox.width / 2, y: rectBBox.y + rectBBox.height },
-                left: { x: rectBBox.x, y: rectBBox.y + rectBBox.height / 2 },
-                right: { x: rectBBox.x + rectBBox.width, y: rectBBox.y + rectBBox.height / 2 }
-            };
+    // }
+    // MouseOut = (evant) => {
+    //     var svg = d3.select('svg');
+    //     svg.selectAll('.arrow-path').remove();
+    // }
+    // MouseMove = (e) => {
+    //     e.preventDefault()
+    //     console.log("move")
 
-            var svg = d3.select('svg');
+    // }
+    // MouseDown = (e) => {
+    //     e.preventDefault()
 
-            // 定义正向箭头
-            // 定义正向箭头
-            svg.append('defs').append('marker')
-                .attr('id', 'arrowhead')
-                .attr('markerUnits', 'userSpaceOnUse')
-                .attr('viewBox', '-0 -5 10 10')
-                .attr('refX', 5)
-                .attr('refY', 0)
-                .attr('orient', 'auto')
-                .attr('markerWidth', 13)
-                .attr('markerHeight', 13)
-                .attr('xoverflow', 'visible')
-                .append('svg:path')
-                .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-                .attr('fill', '#000')
-                .attr('id', `${newId}`)
-                .on("mouseover", this.test)
-                .on("mouseout", this.MouseOut)
-                .on("mousedown", this.MouseDown)
-            // .on("mousemove", this.MouseMove)
-            // .on("mouseup", this.MouseUp)
+    //     const x = e.target.id
+    //     const rect1 = d3_select(`rect#${x}`).node()
+    //     var svg = d3_select('svg');
+    //     const component = this;
+    //     svg.on('mousemove', function (event) {
+    //         event.preventDefault();
+    //         svg.on('mouseup', (function (e) {
+    //             svg.on('mousemove', null);
+    //             const id = e.target.id;
+    //             const newId = id.split("elem_").join("");
+    //             const myRect = d3.select(`rect#${newId}`).node();
 
-            // 定义反向箭头
-            svg.append('defs').append('marker')
-                .attr('id', 'arrowhead-reverse')
-                .attr('markerUnits', 'userSpaceOnUse')
-                .attr('viewBox', '0 -5 10 10')
-                .attr('refX', 5) // Adjusted refX to reverse the arrowhead
-                .attr('refY', 0)
-                .attr('orient', 'auto')
-                .attr('markerWidth', 13)
-                .attr('markerHeight', 13)
-                .attr('xoverflow', 'visible')
-                .append('svg:path')
-                .attr('d', 'M 10,-5 L 0 ,0 L 10,5')
-                .attr('fill', '#000')
-                .attr('id', `${newId}`)
-                .on("mouseover", this.test)
-                // .on("mouseout", this.MouseOut)
-                .on("mousedown", this.MouseDown)
-            // .on("mousemove", this.MouseMove)
-            // .on("mouseup", this.MouseUp)
+    //             const text1 = rect1.getAttribute("id");
+    //             const text2 = myRect.getAttribute("id");
+
+    //             const text = `${text1}--${text2}`;
+
+    //             component.props.shapeText(text);
+    //             console.log(text);
+    //         }));
+
+    //     })
+
+    // }
+    // MouseUp = (e) => {
+    //     e.preventDefault()
+    //     console.log("up")
+    // }
+
+    // handleDragOver = (e) => {
+    //     e.preventDefault(); // 防止預設的放置行為
 
 
 
-            Object.entries(arrowPositions).forEach(([direction, pos]) => {
-                let line;
-                let arrowAttr = 'marker-end'; // 默认使用 marker-end
-                let arrowId = 'arrowhead'; // 默认使用正向箭头
-
-                switch (direction) {
-                    case 'up':
-                        line = { x1: pos.x, y1: pos.y - 10, x2: pos.x, y2: pos.y + 1 };
-                        arrowAttr = 'marker-start';
-                        arrowId = 'arrowhead-reverse';
-                        break;
-                    case 'down':
-                        line = { x1: pos.x, y1: pos.y - 1, x2: pos.x, y2: pos.y + 10 };
-                        break;
-                    case 'left':
-                        line = { x1: pos.x - 10, y1: pos.y, x2: pos.x + 1, y2: pos.y };
-                        arrowAttr = 'marker-start';
-                        arrowId = 'arrowhead-reverse';
-                        break;
-                    case 'right':
-                        line = { x1: pos.x - 1, y1: pos.y, x2: pos.x + 10, y2: pos.y };
-                        break;
-                }
-
-                // 创建路径并应用箭头标记
-                svg.append('path')
-                    .classed('arrow-path', true)
-                    .attr('d', `M ${line.x1},${line.y1} L${line.x2},${line.y2}`)
-                    .attr('stroke', 'blue')
-                    .attr('stroke-width', 7)
-                    .attr('fill', 'none')
-                    .attr('id', `${newId}`)
-                    .attr(arrowAttr, `url(#${arrowId})`)
-                    .on("mouseover", this.test)
-                    .on("mouseout", this.MouseOut)
-                    .on("mousedown", this.MouseDown)
-                // .on("mousemove", this.MouseMove)
-                // .on("mouseup", this.MouseUp)
-            });
-
-        }
-
-
-    }
-    test = () => {
-        this.setState({ mouseLeave: true })
-        console.log("ll")
-    }
-
-    createArrow = (fromX, fromY, toX, toY) => {
-        var svg = d3.select('svg');
-
-    }
-    MouseOut = (evant) => {
-        var svg = d3.select('svg');
-        svg.selectAll('.arrow-path').remove();
-    }
-    MouseMove = (e) => {
-        e.preventDefault()
-        console.log("move")
-
-    }
-    MouseDown = (e) => {
-        e.preventDefault()
-
-        const x = e.target.id
-        const rect1 = d3_select(`rect#${x}`).node()
-        var svg = d3_select('svg');
-        const component = this;
-        svg.on('mousemove', function (event) {
-            event.preventDefault();
-            svg.on('mouseup', (function (e) {
-                svg.on('mousemove', null);
-                const id = e.target.id;
-                const newId = id.split("elem_").join("");
-                const myRect = d3.select(`rect#${newId}`).node();
-
-                const text1 = rect1.getAttribute("id");
-                const text2 = myRect.getAttribute("id");
-
-                const text = `${text1}--${text2}`;
-
-                component.props.shapeText(text);
-                console.log(text);
-            }));
-
-        })
-
-    }
-    MouseUp = (e) => {
-        e.preventDefault()
-        console.log("up")
-    }
-
-    handleDragOver = (e) => {
-        e.preventDefault(); // 防止預設的放置行為
-
-
-
-    };
+    // };
 
     handleDrop = (e) => {
         e.preventDefault();
