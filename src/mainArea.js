@@ -9,6 +9,7 @@ import { encode } from "plantuml-encoder";
 
 import ClassDiagram from "./ClassDiagram";
 import ClassTree from "./Class_Tree";
+import UseCase from "./use case diagram";
 // import * as data from './dot.json';
 // const getBaseURL = "https://localhost/mykmap/getDot.php";
 const getBaseURL = "https://cip.nknu.edu.tw/myKMap/react/build/getDot.php";
@@ -106,6 +107,8 @@ class MainArea extends React.Component {
             let str = "Bob -> Alice : hello"
             this.setState({
                 dotSrc: `@startuml
+participant Bob
+participant Alice
 ${str}
 @enduml`}
             )
@@ -115,6 +118,22 @@ ${str}
             let str = `class class
 class class01
 class class02
+`
+            this.setState({
+                dotSrc: `@startuml
+${str}
+@enduml`}
+            )
+            this.setState({ ImgUrl: `//www.plantuml.com/plantuml/svg/${encode(str)}` })
+
+        }
+        else if (value === "UseCase") {
+            let str = `
+(First usecase)
+(Another usecase) as (UC2)
+usecase UC3
+usecase (Last\\nusecase) as UC4
+
 `
             this.setState({
                 dotSrc: `@startuml
@@ -144,6 +163,7 @@ ${str}
     render() {
         let newNode = this.state.newNode;
         const { selectedComponent } = this.state;
+        console.log(selectedComponent)
         const { selection } = this.state;
         const options = ['SVG', 'PNG', 'TEXT'];
         let componentToRender;
@@ -181,6 +201,19 @@ ${str}
                 />
                 componentToRender1 = <ClassTree
                     onDataUpdate={this.handleDataFromTree} />
+                break;
+            case 'UseCase':
+                componentToRender = < UseCase
+                    ref={this.graphRef}
+                    ImgUrl={this.state.ImgUrl}
+                    parentFunction={this.graphGettext.bind(this)}
+                    shapeText={this.getShapeText.bind(this)}
+                    EditorText={this.state.dotSrc}
+                    data={this.state.dataFromTree}
+                    witreToEdit={this.witreToEditor.bind(this)}
+                />
+                // componentToRender1 = <ClassTree
+                //     onDataUpdate={this.handleDataFromTree} />
                 break;
 
             default:

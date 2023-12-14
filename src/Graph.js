@@ -5,11 +5,12 @@ import 'd3-graphviz';
 import * as d3 from 'd3';
 import axios from 'axios';
 
-import { ContextMenu, MenuItem, ContextMenuTrigger } from "react-contextmenu";
+import { ContextMenu, MenuItem, ContextMenuTrigger, SubMenu } from "react-contextmenu";
 
 
 import shapeJson from "./shape.json";
 import DownloadButton from './DownLoad';
+import { split } from 'react-ace';
 class Graph extends React.Component {
     constructor(props) {
         super(props);
@@ -55,6 +56,11 @@ class Graph extends React.Component {
             line: null,
             arrow: null,
             resetLine: null,
+
+            //ctrl鍵狀態
+            ctrlType: false,
+            //虛框的元素
+            node: []
         };
 
         this.dragging = false;
@@ -63,7 +69,7 @@ class Graph extends React.Component {
         this.translate = { x: 0, y: 0 };
         this.containerRef = React.createRef();
         this.inputRef = React.createRef();
-
+        this.editRef = React.createRef();
     }
     componentDidMount() {
         this.fetchSvg(this.props.ImgUrl);
@@ -80,11 +86,13 @@ class Graph extends React.Component {
         });
 
         if (this.containerRef.current) {
-            this.observer.observe(this.containerRef.current);
+            this.observer.observe(this.editRef.current);
 
         }
+        window.addEventListener('keydown', this.handleKeyDown);
+        window.addEventListener('keyup', this.handleKeyUp);
 
-
+        this.containerRef.current.addEventListener('contextmenu', this.handleSvgContextMenu);
         // this.setupDragBehavior();
     }
     componentWillUnmount() {
@@ -95,7 +103,11 @@ class Graph extends React.Component {
         if (this.observer && this.containerRef.current) {
             this.observer.unobserve(this.containerRef.current);
         }
-
+        if (this.containerRef.current) {
+            this.containerRef.current.removeEventListener('contextmenu', this.handleSvgContextMenu);
+        }
+        window.removeEventListener('keydown', this.handleKeyDown);
+        window.removeEventListener('keyup', this.handleKeyUp);
     }
     componentDidUpdate(prevProps, prevState) {
         if (this.props.svgUrl !== prevProps.svgUrl) {
@@ -150,6 +162,7 @@ class Graph extends React.Component {
             //editpanel的大小
             const x = this.state.dimensions.width;
             const y = this.state.dimensions.height;
+            console.log(x, y)
 
             const svgAima = this.state.svgContent;
 
@@ -960,15 +973,12 @@ class Graph extends React.Component {
 
         container.on("click", this.resetAllBoolean.bind(this));
         container.selectAll("svg").on("wheel", this.mouseWheel.bind(this));
-        // container.selectAll('text[id^="edge_"], line[id^="arrow_"],text[id^="edge_"], line[id^="arrow_"]').on("click", this.polygon.bind(this))
-        // container.selectAll('polygon').on("mouseenter", function () { d3.select(this).style('cursor', 'crosshair'); })
-        // container.selectAll('polygon').on("mousedown", this.polygonDrog.bind(this))
-        // container.selectAll('polygon').on("mouseup", this.polygonDrogend1.bind(this))
-        // container.selectAll('.rectLine').on("mouseup", this.polygonDrogend.bind(this))
+        //                          
 
         container.selectAll("*").on("click", this.DomLine);
 
         //右鍵
+        container.selectAll('[type="node"]').on('contextmenu', this.contextMenuRect.bind(this));
 
     }
 
@@ -1130,10 +1140,13 @@ class Graph extends React.Component {
 
     //點擊別的地方時重置變數
     resetAllBoolean = () => {
+        const container = (d3.select(this.containerRef.current)).select('svg')
         this.setState({
             textDoubleClick: false,
 
         })
+        container.selectAll("#xuxian").remove()
+
         // console.log("ll")
 
     }
@@ -1872,6 +1885,7 @@ end`
 
 
 
+
         for (var i = 0; i < lines.length; i++) {
             if (i + 1 === lines.length) {
 
@@ -1882,6 +1896,8 @@ end`
 
                 let id1 = line1.attr("id")
                 let id2 = line2.attr("id")
+
+                console.log(id1, id2)
 
                 // 獲取線條的坐標
                 let x1 = parseFloat(line1.attr("x1"));
@@ -1894,6 +1910,28 @@ end`
                 let rectY = y1;
                 let rectWidth = x2 - x1;
                 let rectHeight = y2 - y1;
+
+                d3.selectAll('line[id*="edge"]')
+                    .each(function () {
+                        // 获取每个<line>元素的起点和终点坐标
+                        const line = d3.select(this);
+                        const x1 = parseFloat(line.attr('x1'));
+                        const y1 = parseFloat(line.attr('y1'));
+                        const x2 = parseFloat(line.attr('x2'));
+                        const y2 = parseFloat(line.attr('y2'));
+
+                        // 判断<line>元素的起点和终点是否在矩形框内
+                        const isInRect = (x, y) =>
+                            x >= rectX && x <= rectX + rectWidth &&
+                            y >= rectY && y <= rectY + rectHeight;
+
+                        if (isInRect(x1, y1) && isInRect(x2, y2)) {
+                            // 这里处理在矩形框内的<line>元素
+                            line.attr("beforeRectLine", `${id1}`)
+                                .attr("afterRectLine", `${id2}`)
+                        }
+                    });
+
 
                 // 在SVG中添加rect
                 container.append('rect')
@@ -1967,438 +2005,438 @@ end`
 
 
     //為元素添加虛綫框
-    DomLine = (event) => {
-        event.stopPropagation();
-        const clickedElement = d3.select(event.currentTarget);
-        const container = this.state.svgDom;
-        let text = this.props.EditorText.split('\n')
-
-        try {
-            // 检查是否为 text 元素
-            if (clickedElement.node().tagName === 'text') {
-                return; // 如果是 text 元素，则不进行任何操作
-            }
-
-            const isHighlighted = clickedElement.classed('highlighted');
-
-
-            if (isHighlighted) {
-                // 如果元素已经被高亮，则移除高亮
-                clickedElement.classed('highlighted', false);
-                d3.select('#highlighted-border').remove();
-                d3.selectAll('.resize-handle').remove();
-                this.setState({ onclickElement: null })
-
-            } else {
-                // 添加高亮
-                this.setState({ onclickElement: clickedElement })
-                clickedElement.classed('highlighted', true);
-
-                const bbox = clickedElement.node().getBBox();
-                const highlightRect = d3.select(clickedElement.node().parentNode)
-                    .append('rect')
-                    .attr('id', 'highlighted-border')
-                    .attr('x', bbox.x - 2)
-                    .attr('y', bbox.y - 2)
-                    .attr('width', bbox.width + 4)
-                    .attr('height', bbox.height + 4)
-                    .style('fill', 'none')
-                    .style('stroke', 'black')
-                    .style('stroke-width', '2px')
-                    .style('stroke-dasharray', '5,5')
-                    .style('pointer-events', 'all') // 确保虚线框响应鼠标事件
-                    .call(d3.drag()
-                        .on("start", dragstarted)
-                        .on("drag", dragged)
-                        .on("end", (e) => dragended(e)));
-
-
-
-                const handleSize = 5; // 控制点的大小
-                const handleRadius = handleSize / 2; // 控制点的半径
-
-                // 确保控制点的中心位于边界框的角上
-                const corners = [
-                    { x: bbox.x - handleRadius - 1, y: bbox.y - handleRadius - 1, cursor: 'nwse-resize' }, // 左上角
-                    { x: bbox.x + bbox.width - handleRadius + 1, y: bbox.y - handleRadius - 1, cursor: 'nesw-resize' }, // 右上角
-                    { x: bbox.x - handleRadius - 1, y: bbox.y + bbox.height - handleRadius + 1, cursor: 'nesw-resize' }, // 左下角
-                    { x: bbox.x + bbox.width - handleRadius + 1, y: bbox.y + bbox.height - handleRadius + 1, cursor: 'nwse-resize' } // 右下角
-                ];
-
-                corners.forEach((corner, index) => {
-                    d3.select(clickedElement.node().parentNode)
-                        .append('circle')
-                        .attr('cx', corner.x + handleRadius) // 加上半径以定位中心
-                        .attr('cy', corner.y + handleRadius)
-                        .attr('r', handleRadius)
-                        .style('opacity', 0)
-                        .attr('class', `resize-handle resize-handle-${index}`)
-                        .style('cursor', corner.cursor) // 使用指定的光标样式
-                        .call(d3.drag()
-                            // 这里可以添加拖拽事件处理
-                            // ...
-                        );
-                });
-
-                this.LineMove(clickedElement, bbox);
-                function dragstarted(event) {
-                    d3.select(this).raise(); // 提升层级以便拖拽
-                }
-                function makeLine(element, d, event) {
-                    const bbox = d3.select(element).node().getBBox();
-                    const currentX = bbox.x + bbox.width / 2;
-                    const currentY = bbox.y + bbox.height / 2;
-                    const elementType = d3.select(clickedElement.node()).attr('type');  // 获取自定义属性 'type'
-
-                    // 获取 SVG 容器的尺寸
-                    const svgWidth = d3.select('svg').node().clientWidth;
-                    const svgHeight = d3.select('svg').node().clientHeight;
-
-                    // 选择或创建辅助线
-                    let line = d3.select('#auxiliary-line');
-                    if (line.empty()) {
-                        line = d3.select('svg')
-                            .append('line')
-                            .attr('id', 'auxiliary-line')
-                            .attr('stroke', 'black')
-                            .attr('stroke-width', 2);
-                    }
-
-                    // 根据 'type' 属性值绘制辅助线
-                    if (elementType === 'node') {
-                        line.attr('x1', currentX)
-                            .attr('y1', -svgHeight)
-                            .attr('x2', currentX)
-                            .attr('y2', svgHeight);
+    // DomLine = (event) => {
+    //     event.stopPropagation();
+    //     const clickedElement = d3.select(event.currentTarget);
+    //     const container = this.state.svgDom;
+    //     let text = this.props.EditorText.split('\n')
+
+    //     try {
+    //         // 检查是否为 text 元素
+    //         if (clickedElement.node().tagName === 'text') {
+    //             return; // 如果是 text 元素，则不进行任何操作
+    //         }
+
+    //         const isHighlighted = clickedElement.classed('highlighted');
+
+
+    //         if (isHighlighted) {
+    //             // 如果元素已经被高亮，则移除高亮
+    //             clickedElement.classed('highlighted', false);
+    //             d3.select('#highlighted-border').remove();
+    //             d3.selectAll('.resize-handle').remove();
+    //             this.setState({ onclickElement: null })
+
+    //         } else {
+    //             // 添加高亮
+    //             this.setState({ onclickElement: clickedElement })
+    //             clickedElement.classed('highlighted', true);
+
+    //             const bbox = clickedElement.node().getBBox();
+    //             const highlightRect = d3.select(clickedElement.node().parentNode)
+    //                 .append('rect')
+    //                 .attr('id', 'highlighted-border')
+    //                 .attr('x', bbox.x - 2)
+    //                 .attr('y', bbox.y - 2)
+    //                 .attr('width', bbox.width + 4)
+    //                 .attr('height', bbox.height + 4)
+    //                 .style('fill', 'none')
+    //                 .style('stroke', 'black')
+    //                 .style('stroke-width', '2px')
+    //                 .style('stroke-dasharray', '5,5')
+    //                 .style('pointer-events', 'all') // 确保虚线框响应鼠标事件
+    //                 .call(d3.drag()
+    //                     .on("start", dragstarted)
+    //                     .on("drag", dragged)
+    //                     .on("end", (e) => dragended(e)));
+
+
+
+    //             const handleSize = 5; // 控制点的大小
+    //             const handleRadius = handleSize / 2; // 控制点的半径
+
+    //             // 确保控制点的中心位于边界框的角上
+    //             const corners = [
+    //                 { x: bbox.x - handleRadius - 1, y: bbox.y - handleRadius - 1, cursor: 'nwse-resize' }, // 左上角
+    //                 { x: bbox.x + bbox.width - handleRadius + 1, y: bbox.y - handleRadius - 1, cursor: 'nesw-resize' }, // 右上角
+    //                 { x: bbox.x - handleRadius - 1, y: bbox.y + bbox.height - handleRadius + 1, cursor: 'nesw-resize' }, // 左下角
+    //                 { x: bbox.x + bbox.width - handleRadius + 1, y: bbox.y + bbox.height - handleRadius + 1, cursor: 'nwse-resize' } // 右下角
+    //             ];
+
+    //             corners.forEach((corner, index) => {
+    //                 d3.select(clickedElement.node().parentNode)
+    //                     .append('circle')
+    //                     .attr('cx', corner.x + handleRadius) // 加上半径以定位中心
+    //                     .attr('cy', corner.y + handleRadius)
+    //                     .attr('r', handleRadius)
+    //                     .style('opacity', 0)
+    //                     .attr('class', `resize-handle resize-handle-${index}`)
+    //                     .style('cursor', corner.cursor) // 使用指定的光标样式
+    //                     .call(d3.drag()
+    //                         // 这里可以添加拖拽事件处理
+    //                         // ...
+    //                     );
+    //             });
+
+    //             this.LineMove(clickedElement, bbox);
+    //             function dragstarted(event) {
+    //                 d3.select(this).raise(); // 提升层级以便拖拽
+    //             }
+    //             function makeLine(element, d, event) {
+    //                 const bbox = d3.select(element).node().getBBox();
+    //                 const currentX = bbox.x + bbox.width / 2;
+    //                 const currentY = bbox.y + bbox.height / 2;
+    //                 const elementType = d3.select(clickedElement.node()).attr('type');  // 获取自定义属性 'type'
+
+    //                 // 获取 SVG 容器的尺寸
+    //                 const svgWidth = d3.select('svg').node().clientWidth;
+    //                 const svgHeight = d3.select('svg').node().clientHeight;
+
+    //                 // 选择或创建辅助线
+    //                 let line = d3.select('#auxiliary-line');
+    //                 if (line.empty()) {
+    //                     line = d3.select('svg')
+    //                         .append('line')
+    //                         .attr('id', 'auxiliary-line')
+    //                         .attr('stroke', 'black')
+    //                         .attr('stroke-width', 2);
+    //                 }
+
+    //                 // 根据 'type' 属性值绘制辅助线
+    //                 if (elementType === 'node') {
+    //                     line.attr('x1', currentX)
+    //                         .attr('y1', -svgHeight)
+    //                         .attr('x2', currentX)
+    //                         .attr('y2', svgHeight);
 
-                        // 查找左右两侧最近的元素
+    //                     // 查找左右两侧最近的元素
 
-                    } else {
-                        line.attr('x1', 0)
-                            .attr('y1', currentY)
-                            .attr('x2', svgWidth)
-                            .attr('y2', currentY);
+    //                 } else {
+    //                     line.attr('x1', 0)
+    //                         .attr('y1', currentY)
+    //                         .attr('x2', svgWidth)
+    //                         .attr('y2', currentY);
 
-                        // 查找上下最近的元素
+    //                     // 查找上下最近的元素
 
-                    }
-                }
+    //                 }
+    //             }
 
-                const findClosestElements = (positionX, positionY) => {
+    //             const findClosestElements = (positionX, positionY) => {
 
-                    const elements = container; // 確保這裡的 container 是元素集合
-                    let closestLeft = null, closestRight = null;
-                    let closestTop = null, closestBottom = null;
-                    let minLeftDistance = Infinity, minRightDistance = Infinity;
-                    let minTopDistance = Infinity, minBottomDistance = Infinity;
+    //                 const elements = container; // 確保這裡的 container 是元素集合
+    //                 let closestLeft = null, closestRight = null;
+    //                 let closestTop = null, closestBottom = null;
+    //                 let minLeftDistance = Infinity, minRightDistance = Infinity;
+    //                 let minTopDistance = Infinity, minBottomDistance = Infinity;
 
-                    elements.slice(3).forEach(el => {
-                        // 檢查元素是否是 rect 類型且 type 屬性為 'node'
+    //                 elements.slice(3).forEach(el => {
+    //                     // 檢查元素是否是 rect 類型且 type 屬性為 'node'
 
-                        const bbox = el.getBBox();
-                        const elXCenter = bbox.x + bbox.width / 2;
-                        const elYCenter = bbox.y + bbox.height / 2;
+    //                     const bbox = el.getBBox();
+    //                     const elXCenter = bbox.x + bbox.width / 2;
+    //                     const elYCenter = bbox.y + bbox.height / 2;
 
-                        // 水平方向判斷（竪線時）
-                        if (positionX !== null) {
+    //                     // 水平方向判斷（竪線時）
+    //                     if (positionX !== null) {
 
-                            if (el.tagName.toLowerCase() === 'rect' && el.getAttribute('type') === 'node') {
+    //                         if (el.tagName.toLowerCase() === 'rect' && el.getAttribute('type') === 'node') {
 
-                                if (elXCenter < positionX) { // 元素在輔助線左側
+    //                             if (elXCenter < positionX) { // 元素在輔助線左側
 
-                                    const distance = positionX - elXCenter;
-                                    if (distance < minLeftDistance) {
-                                        minLeftDistance = distance;
-                                        closestLeft = el;
-                                    }
+    //                                 const distance = positionX - elXCenter;
+    //                                 if (distance < minLeftDistance) {
+    //                                     minLeftDistance = distance;
+    //                                     closestLeft = el;
+    //                                 }
 
-                                } else if (elXCenter > positionX) { // 元素在輔助線右側
-                                    const distance = elXCenter - positionX;
-                                    if (distance < minRightDistance) {
-                                        minRightDistance = distance;
-                                        closestRight = el;
-                                    }
+    //                             } else if (elXCenter > positionX) { // 元素在輔助線右側
+    //                                 const distance = elXCenter - positionX;
+    //                                 if (distance < minRightDistance) {
+    //                                     minRightDistance = distance;
+    //                                     closestRight = el;
+    //                                 }
 
 
-                                }
-                            }
-                        }
+    //                             }
+    //                         }
+    //                     }
 
-                        // 垂直方向判斷（橫線時）
-                        if (positionY !== null) {
+    //                     // 垂直方向判斷（橫線時）
+    //                     if (positionY !== null) {
 
 
-                            if (elYCenter < positionY) { // 元素在輔助線上方
-                                const distance = positionY - elYCenter;
-                                if (distance < minTopDistance) {
-                                    minTopDistance = distance;
-                                    closestTop = el;
-                                }
-                            } else if (elYCenter > positionY) { // 元素在輔助線下方
-                                const distance = elYCenter - positionY;
-                                if (distance < minBottomDistance) {
-                                    minBottomDistance = distance;
-                                    closestBottom = el;
-                                }
-                            }
+    //                         if (elYCenter < positionY) { // 元素在輔助線上方
+    //                             const distance = positionY - elYCenter;
+    //                             if (distance < minTopDistance) {
+    //                                 minTopDistance = distance;
+    //                                 closestTop = el;
+    //                             }
+    //                         } else if (elYCenter > positionY) { // 元素在輔助線下方
+    //                             const distance = elYCenter - positionY;
+    //                             if (distance < minBottomDistance) {
+    //                                 minBottomDistance = distance;
+    //                                 closestBottom = el;
+    //                             }
+    //                         }
 
-                        }
+    //                     }
 
-                    });
+    //                 });
 
-                    // 輸出最近的元素
-                    if (positionX !== null) {
-                        this.setState({
-                            closstLeft: closestLeft,
-                            closstRight: closestRight
-                        })
+    //                 // 輸出最近的元素
+    //                 if (positionX !== null) {
+    //                     this.setState({
+    //                         closstLeft: closestLeft,
+    //                         closstRight: closestRight
+    //                     })
 
 
 
 
-                    }
+    //                 }
 
-                    if (positionY !== null) {
+    //                 if (positionY !== null) {
 
-                        this.setState({
-                            closstTop: closestTop,
-                            closstBottom: closestBottom,
-                        })
+    //                     this.setState({
+    //                         closstTop: closestTop,
+    //                         closstBottom: closestBottom,
+    //                     })
 
-                    }
-                }
+    //                 }
+    //             }
 
 
 
 
 
-                // ... 其他函数保持不变
+    //             // ... 其他函数保持不变
 
-                function dragged(event, d) {
+    //             function dragged(event, d) {
 
-                    // 检查d是否定义，并为其提供一个默认值
-                    d = d || { x: 0, y: 0 }; // 如果d是undefined，使用默认值
+    //                 // 检查d是否定义，并为其提供一个默认值
+    //                 d = d || { x: 0, y: 0 }; // 如果d是undefined，使用默认值
 
-                    const dx = event.dx;
-                    const dy = event.dy;
-                    const transform = d.transform || { x: 0, y: 0 }; // 再次检查transform属性
-                    transform.x += dx;
-                    transform.y += dy;
+    //                 const dx = event.dx;
+    //                 const dy = event.dy;
+    //                 const transform = d.transform || { x: 0, y: 0 }; // 再次检查transform属性
+    //                 transform.x += dx;
+    //                 transform.y += dy;
 
-                    // 更新元素的transform属性
-                    clickedElement.attr("transform", `translate(${transform.x},${transform.y})`);
+    //                 // 更新元素的transform属性
+    //                 clickedElement.attr("transform", `translate(${transform.x},${transform.y})`);
 
-                    // 更新虚线框的位置
-                    d3.select(this).attr("x", parseFloat(d3.select(this).attr("x")) + dx)
-                        .attr("y", parseFloat(d3.select(this).attr("y")) + dy);
+    //                 // 更新虚线框的位置
+    //                 d3.select(this).attr("x", parseFloat(d3.select(this).attr("x")) + dx)
+    //                     .attr("y", parseFloat(d3.select(this).attr("y")) + dy);
 
-                    makeLine(this, { dx: event.dx, dy: event.dy }, event);
-                }
+    //                 makeLine(this, { dx: event.dx, dy: event.dy }, event);
+    //             }
 
 
-                function removeHighlight() {
-                    d3.selectAll('.highlighted').classed('highlighted', false);
-                    d3.select('#highlighted-border').remove();
-                    d3.selectAll('.resize-handle').remove();
-                    // this.setState({ onclickElement: null })
-                }
+    //             function removeHighlight() {
+    //                 d3.selectAll('.highlighted').classed('highlighted', false);
+    //                 d3.select('#highlighted-border').remove();
+    //                 d3.selectAll('.resize-handle').remove();
+    //                 // this.setState({ onclickElement: null })
+    //             }
 
-                const dragended = (event) => {
-                    const dragBox = d3.select('#highlighted-border');
-                    const boxX = parseFloat(dragBox.attr('x'));
-                    const boxY = parseFloat(dragBox.attr('y'));
-                    const boxWidth = parseFloat(dragBox.attr('width'));
-                    const boxHeight = parseFloat(dragBox.attr('height'));
-                    d3.select('#auxiliary-line').remove();
+    //             const dragended = (event) => {
+    //                 const dragBox = d3.select('#highlighted-border');
+    //                 const boxX = parseFloat(dragBox.attr('x'));
+    //                 const boxY = parseFloat(dragBox.attr('y'));
+    //                 const boxWidth = parseFloat(dragBox.attr('width'));
+    //                 const boxHeight = parseFloat(dragBox.attr('height'));
+    //                 d3.select('#auxiliary-line').remove();
 
-                    const isVertical = d3.select(clickedElement.node()).attr('type') === 'node';
-                    const positionX = isVertical ? boxX + boxWidth / 2 : null;  // 如果是垂直辅助线，则计算 positionX
-                    const positionY = !isVertical ? boxY + boxHeight / 2 : null; // 如果是水平辅助线，则计算 positionY
-                    const id = clickedElement.node().getAttribute('id');
-                    const dom = d3_select(`text[id=${id}]`).node().textContent;
-                    const str = `participant ${dom}`
+    //                 const isVertical = d3.select(clickedElement.node()).attr('type') === 'node';
+    //                 const positionX = isVertical ? boxX + boxWidth / 2 : null;  // 如果是垂直辅助线，则计算 positionX
+    //                 const positionY = !isVertical ? boxY + boxHeight / 2 : null; // 如果是水平辅助线，则计算 positionY
+    //                 const id = clickedElement.node().getAttribute('id');
+    //                 const dom = d3_select(`text[id=${id}]`).node().textContent;
+    //                 const str = `participant ${dom}`
 
 
-                    if (text.includes(str)) {
-                        findClosestElements(positionX, positionY);
-                    } else if (positionX == null) {
-                        findClosestElements(positionX, positionY);
-                    }
+    //                 if (text.includes(str)) {
+    //                     findClosestElements(positionX, positionY);
+    //                 } else if (positionX == null) {
+    //                     findClosestElements(positionX, positionY);
+    //                 }
 
 
-                    removeHighlight();
-                    this.moveDom(str, clickedElement)
-                }
+    //                 removeHighlight();
+    //                 this.moveDom(str, clickedElement)
+    //             }
 
-            }
+    //         }
 
 
-        } catch (error) {
+    //     } catch (error) {
 
-        }
+    //     }
 
-    }
-    moveDom = (dom, clickNode) => {
-        //竪綫輔助綫
-        let str = this.props.EditorText.split("\n");
-        console.log(this.state.closstLeft, this.state.closstRight, this.state.closstTop, this.state.closstBottom)
-        if (this.state.closstLeft != null && this.state.closstRight != null) {
+    // }
+    // moveDom = (dom, clickNode) => {
+    //     //竪綫輔助綫
+    //     let str = this.props.EditorText.split("\n");
+    //     console.log(this.state.closstLeft, this.state.closstRight, this.state.closstTop, this.state.closstBottom)
+    //     if (this.state.closstLeft != null && this.state.closstRight != null) {
 
-            const Dom1 = this.state.closstLeft.getAttribute("id")
-            const Dom2 = this.state.closstRight.getAttribute("id")
+    //         const Dom1 = this.state.closstLeft.getAttribute("id")
+    //         const Dom2 = this.state.closstRight.getAttribute("id")
 
-            let nodeName1 = d3.select(`text[id = ${Dom1}]`).node().textContent
-            let nodeName2 = d3.select(`text[id = ${Dom2}]`).node().textContent
+    //         let nodeName1 = d3.select(`text[id = ${Dom1}]`).node().textContent
+    //         let nodeName2 = d3.select(`text[id = ${Dom2}]`).node().textContent
 
 
-            str = str.filter(item => item !== dom);
-            let index1 = str.findIndex(item => item.includes(nodeName1));
-            let index2 = str.findIndex(item => item.includes(nodeName2));
+    //         str = str.filter(item => item !== dom);
+    //         let index1 = str.findIndex(item => item.includes(nodeName1));
+    //         let index2 = str.findIndex(item => item.includes(nodeName2));
 
-            if (index1 !== -1 && index2 !== -1 && index1 < index2) {
-                // 在 text2 之前插入 text3
-                str.splice(index2, 0, dom);
-            }
-            const newText = str.join("\n")
-            this.props.witreToEdit(newText)
-            this.setState({
-                closstLeft: null,
-                closstRight: null,
-                closstTop: null,
-                closstBottom: null
-            })
+    //         if (index1 !== -1 && index2 !== -1 && index1 < index2) {
+    //             // 在 text2 之前插入 text3
+    //             str.splice(index2, 0, dom);
+    //         }
+    //         const newText = str.join("\n")
+    //         this.props.witreToEdit(newText)
+    //         this.setState({
+    //             closstLeft: null,
+    //             closstRight: null,
+    //             closstTop: null,
+    //             closstBottom: null
+    //         })
 
-        } else if (this.state.closstLeft != null && this.state.closstRight == null) {
-            str = str.filter(item => item !== dom);
-            str.splice(str.length - 1, 0, dom);
-            const newText = str.join("\n")
-            this.props.witreToEdit(newText)
+    //     } else if (this.state.closstLeft != null && this.state.closstRight == null) {
+    //         str = str.filter(item => item !== dom);
+    //         str.splice(str.length - 1, 0, dom);
+    //         const newText = str.join("\n")
+    //         this.props.witreToEdit(newText)
 
-            this.setState({
-                closstLeft: null,
-                closstRight: null,
-                closstTop: null,
-                closstBottom: null
-            })
-        }
-        //橫向輔助綫
-        else if (this.state.closstTop != null && this.state.closstBottom != null) {
+    //         this.setState({
+    //             closstLeft: null,
+    //             closstRight: null,
+    //             closstTop: null,
+    //             closstBottom: null
+    //         })
+    //     }
+    //     //橫向輔助綫
+    //     else if (this.state.closstTop != null && this.state.closstBottom != null) {
 
-            const Dom1 = this.state.closstTop.getAttribute("id")
-            const Dom2 = this.state.closstBottom.getAttribute("id")
+    //         const Dom1 = this.state.closstTop.getAttribute("id")
+    //         const Dom2 = this.state.closstBottom.getAttribute("id")
 
-            let id = clickNode.node().getAttribute("id").split("_")
-            let allNode = d3.selectAll(`[id^=${id[0]}]`).nodes()
-            //找到帶有id帶有ClickNode的
-            let node = [];
-            allNode.forEach(e => {
-                let id = e.getAttribute("id");
-                if (!node.includes(id)) {
-                    node.push(id)
-                }
+    //         let id = clickNode.node().getAttribute("id").split("_")
+    //         let allNode = d3.selectAll(`[id^=${id[0]}]`).nodes()
+    //         //找到帶有id帶有ClickNode的
+    //         let node = [];
+    //         allNode.forEach(e => {
+    //             let id = e.getAttribute("id");
+    //             if (!node.includes(id)) {
+    //                 node.push(id)
+    //             }
 
-            })
-            //然後判斷屬於第幾個
-            let index = this.findIndexInArray(node, clickNode.node().getAttribute("id"));
-            //然後去找
+    //         })
+    //         //然後判斷屬於第幾個
+    //         let index = this.findIndexInArray(node, clickNode.node().getAttribute("id"));
+    //         //然後去找
 
-            let text = d3.select(`text[id="${clickNode.node().getAttribute("id")}"]`).node().textContent
-            let indexOfText = this.findNthOccurrence(str, clickNode.node().getAttribute("id"), index);
+    //         let text = d3.select(`text[id="${clickNode.node().getAttribute("id")}"]`).node().textContent
+    //         let indexOfText = this.findNthOccurrence(str, clickNode.node().getAttribute("id"), index);
 
-            //獲取所有altrect元素
-            let allAltRect = d3.selectAll(`[id^=altRect]`).nodes()
-            //獲取所有altelse元素
-            let allAltelse = d3.selectAll(`[id^=altesle]`).nodes()
-            //過濾重複元素
-            let newallAltelse = [];
-            allNode.forEach(e => {
-                let id = e.getAttribute("id");
-                if (!newallAltelse.includes(id)) {
-                    newallAltelse.push(id)
-                }
+    //         //獲取所有altrect元素
+    //         let allAltRect = d3.selectAll(`[id^=altRect]`).nodes()
+    //         //獲取所有altelse元素
+    //         let allAltelse = d3.selectAll(`[id^=altesle]`).nodes()
+    //         //過濾重複元素
+    //         let newallAltelse = [];
+    //         allNode.forEach(e => {
+    //             let id = e.getAttribute("id");
+    //             if (!newallAltelse.includes(id)) {
+    //                 newallAltelse.push(id)
+    //             }
 
-            })
+    //         })
 
 
 
-            if (text === "loop" || text === "alt" || text === "opt") {
-                const x = this.findMatchingLoops(str, text, index, "end");
-                const y = x[index - 1]
+    //         if (text === "loop" || text === "alt" || text === "opt") {
+    //             const x = this.findMatchingLoops(str, text, index, "end");
+    //             const y = x[index - 1]
 
 
 
-                if (this.state.closstTop.getAttribute("id").includes("altRect")) {
-                    let index = this.findIndexInArray(allAltRect, newallAltelse);
-                    console.log(index)
+    //             if (this.state.closstTop.getAttribute("id").includes("altRect")) {
+    //                 let index = this.findIndexInArray(allAltRect, newallAltelse);
+    //                 console.log(index)
 
-                } else if (this.state.closstBottom.getAttribute("id").includes("altRect")) {
+    //             } else if (this.state.closstBottom.getAttribute("id").includes("altRect")) {
 
-                } else {
-                    const x = this.findMatchingLoops(str, text, index, "end");
-                    let text1 = d3.select(`text[id="${Dom1}"]`).node().textContent;
-                    let text2 = d3.select(`text[id="${Dom2}"]`).node().textContent;
-                    let arr = str
+    //             } else {
+    //                 const x = this.findMatchingLoops(str, text, index, "end");
+    //                 let text1 = d3.select(`text[id="${Dom1}"]`).node().textContent;
+    //                 let text2 = d3.select(`text[id="${Dom2}"]`).node().textContent;
+    //                 let arr = str
 
-                    let start = x[index - 1].start;
-                    let end = x[index - 1].end;
+    //                 let start = x[index - 1].start;
+    //                 let end = x[index - 1].end;
 
 
-                    let index1 = arr.findIndex(item => item.includes(text1));
-                    let index2 = arr.findIndex(item => item.includes(text2));
+    //                 let index1 = arr.findIndex(item => item.includes(text1));
+    //                 let index2 = arr.findIndex(item => item.includes(text2));
 
-                    const maxIndex = Math.max(index1, index2);
-                    const minIndex = Math.min(index1, index2);
+    //                 const maxIndex = Math.max(index1, index2);
+    //                 const minIndex = Math.min(index1, index2);
 
-                    // 先保存原本的值
-                    const el1 = arr[start];
-                    const el2 = arr[end];
+    //                 // 先保存原本的值
+    //                 const el1 = arr[start];
+    //                 const el2 = arr[end];
 
-                    // 從數組中刪除元素
-                    if (start < end) {
-                        arr.splice(end, 1);
-                        arr.splice(start, 1);
-                    } else {
-                        arr.splice(start, 1);
-                        arr.splice(end, 1);
-                    }
+    //                 // 從數組中刪除元素
+    //                 if (start < end) {
+    //                     arr.splice(end, 1);
+    //                     arr.splice(start, 1);
+    //                 } else {
+    //                     arr.splice(start, 1);
+    //                     arr.splice(end, 1);
+    //                 }
 
-                    // 調整索引
-                    let newMaxIndex = maxIndex - (maxIndex > start) - (maxIndex > end);
-                    let newMinIndex = minIndex - (minIndex > start) - (minIndex > end);
+    //                 // 調整索引
+    //                 let newMaxIndex = maxIndex - (maxIndex > start) - (maxIndex > end);
+    //                 let newMinIndex = minIndex - (minIndex > start) - (minIndex > end);
 
-                    // 插入元素
-                    if (newMaxIndex === newMinIndex) {
-                        // 如果插入位置相同，則先插入 el2，然後是 el1
-                        arr.splice(newMaxIndex + 1, 0, el2, el1);
-                    } else {
-                        // 插入 el2 到最大索引處
-                        arr.splice(newMaxIndex, 0, el2);
-                        // 插入 el1 到最小索引處
-                        arr.splice(newMinIndex + 1, 0, el1);
-                    }
-                    let newStr = arr.join("\n")
-                    this.props.witreToEdit(newStr)
-                }
+    //                 // 插入元素
+    //                 if (newMaxIndex === newMinIndex) {
+    //                     // 如果插入位置相同，則先插入 el2，然後是 el1
+    //                     arr.splice(newMaxIndex + 1, 0, el2, el1);
+    //                 } else {
+    //                     // 插入 el2 到最大索引處
+    //                     arr.splice(newMaxIndex, 0, el2);
+    //                     // 插入 el1 到最小索引處
+    //                     arr.splice(newMinIndex + 1, 0, el1);
+    //                 }
+    //                 let newStr = arr.join("\n")
+    //                 this.props.witreToEdit(newStr)
+    //             }
 
-            } else {
+    //         } else {
 
-                const x = this.findMatchingLoops(str, text, index, null);
+    //             const x = this.findMatchingLoops(str, text, index, null);
 
-            }
+    //         }
 
-            let newStr = str;
+    //         let newStr = str;
 
 
-            this.setState({
-                closstLeft: null,
-                closstRight: null,
-                closstTop: null,
-                closstBottom: null
-            })
+    //         this.setState({
+    //             closstLeft: null,
+    //             closstRight: null,
+    //             closstTop: null,
+    //             closstBottom: null
+    //         })
 
-        }
+    //     }
 
-    }
+    // }
 
     ////
     findMatchingLoops(code, text1, num, text2) {
@@ -2658,18 +2696,21 @@ end`
         const element = nodes;
         const selectElement = this.state.onclickElement.node().id
         const nodesType = [];
-        console.log(nodesType)
 
         element.each(function () {
             const id = this.id
             if (!nodesType.includes(id)) {
                 // 如果不存在，則添加到陣列中
+
                 if (!id.includes(`${selectElement}`)) {
                     if (id.includes('altRect_')) {
+
                     } else {
                         nodesType.push(id);
                     }
+
                 }
+
             } else {
 
             }
@@ -2734,225 +2775,65 @@ end`
     //判斷框内的元素要如何定義
     //點擊的元素，框内的元素，editor字串
     EditorTextNode = (clicknode, nodesType, editorText) => {
-        const svg = (d3.select(this.containerRef.current)).select('svg');
-        console.log(clicknode, nodesType, editorText)
-        //所有ifelse元素
-        const ifElseElement = svg.selectAll("rect[id^='altesle']").nodes();
-        //點擊的是第幾個ifelse
-        let ifElseIndex = 0;
-        for (var i = 0; i < ifElseElement.length; i++) {
-            if (ifElseElement[i].getAttribute('id') === clicknode) {
-                ifElseIndex = i + 1;
-                break;
-            }
+        console.log(nodesType)
+        let text = editorText;
+        let ifElse = ["loop", "alt", "opt"];
+        let end = ["end"];
+        //判斷有多少個ifelse
+        let totalCount = ifElse.reduce((count, targetString) => {
+            return count + text.filter(item => item === targetString).length;
+        }, 0);
+        let totalCount1 = end.reduce((count, targetString) => {
+            return count + text.filter(item => item === targetString).length;
+        }, 0);
+        //
+        //////
+        //判斷我點擊的是第幾個
+        const ifelse = d3.selectAll('text[id^="altesle_"]').nodes();
+        //這是我點擊的元素的index
+        const index = ifelse.findIndex(element => element.id === clicknode);
+        //
+        const Dom = ifelse[index].textContent;
 
-        }
-
-        //尋找點擊元素在text中的位置
-        let clickNodeIndex = [];
-        console.log(ifElseIndex)
-        const node11 = svg.select(`text[id='${clicknode}']`).node().textContent;
-        let index1 = 0;
-        let index2 = 0;
-        for (var i = 0; i < editorText.length; i++) {
-            //尋找node11的index
-            if (index1 != ifElseIndex) {
-                if (editorText[i].includes("alt") || editorText[i].includes("loop") || editorText[i].includes("opt")) {
-                    index1 += 1;
-                    console.log("jic")
-                }
-            } else {
-                clickNodeIndex.push(i);
-                break;
-            }
-
-        }
-        for (var i = 0; i < editorText.length; i++) {
-            if (index2 != ifElseIndex) {
-                if (editorText[i] == "end") {
-                    index2 += 1;
-                    console.log("jic")
-                }
-            } else {
-                clickNodeIndex.push(i);
-                break;
-            }
-        }
-
-
-
-        //框住的元素在text中的index
-        let Elementindex = [];
+        //判斷editorText要如何變更
+        const edittext = editorText;
+        const num = 0;
+        let edgecount = [];
+        //判斷edge在text中的位置
         for (var i = 0; i < nodesType.length; i++) {
-            const node = nodesType[i];
-            //尋找框住元素在text的index
-            if (node.includes('edge_')) {
-                const node1 = svg.select(`text[id='${node}']`).node();
-                const text = node1.textContent;
-                for (var j = 0; j < editorText.length; j++) {
-                    if (editorText[j].includes(text)) {
-                        Elementindex.push(j);
-                        break;
+            let id = nodesType[i];
 
-                    }
-                }
-            }
-            //判斷特殊字串的index 
-            //被框選的特殊字串
-            else if (node.includes('altesle_')) {
-                //儲存特殊字與end的
-                let indexend = [];
-                const node1 = svg.select(`text[id='${node}']`).node().textContent;
-                console.log(node1)
-                //判斷字串在ifelse是第幾個
-                let x = 0;
-                for (var j = 0; j < ifElseElement.length; j++) {
-                    if (node === ifElseElement[j].getAttribute('id')) {
-                        x = j + 1;
-                        break;
-                    }
-                }
-                //尋找被框選的字串在text的index
-                let y = 0;
-                let z = 0;
-
-                //判斷特數字
-                for (var j = 0; j < editorText.length; j++) {
-
-                    if (x === y) {
-
-                        indexend.push(j)
-                        break;
-                    } else {
-                        if (editorText[j].includes("alt") || editorText[j].includes("loop") || editorText[j].includes("opt")) {
-                            y += 1;
-                        }
-                    }
-                }
-                //判斷end
-                for (var j = 0; j < editorText.length; j++) {
-                    if (x === z) {
-                        indexend.push(j)
-                        break;
-                    } else {
-                        if (editorText[j] === "end") {
-                            z += 1;
-                        }
-                    }
-                }
-                Elementindex.push(indexend)
-
+            if (id.includes("edge_")) {
+                let Dom = d3.selectAll('polygon[id^="edge_"]').nodes();
+                const index = Dom.findIndex(element => element.id === id) + 1;
+                edgecount.push(index)
+            } else if (id.includes("altesle_")) {
+                let Dom = d3.selectAll('rect[id^="altesle_"]').nodes();
+                const { index1, index2 } = this.findTextIndices();
+                edgecount.push(index1, index2)
             }
         }
 
-
-        //判斷框内元素有什麽
-
-
-        // console.log(nodesType)
-        // let text = editorText;
-        // let ifElse = ["loop", "alt", "opt"];
-        // let end = ["end"];
-        // //判斷有多少個ifelse
-        // let totalCount = ifElse.reduce((count, targetString) => {
-        //     return count + text.filter(item => item === targetString).length;
-        // }, 0);
-        // let totalCount1 = end.reduce((count, targetString) => {
-        //     return count + text.filter(item => item === targetString).length;
-        // }, 0);
-        // //
-        // //////
-        // //判斷我點擊的是第幾個
-        // const ifelse = d3.selectAll('text[id^="altesle_"]').nodes();
-        // //這是我點擊的元素的index
-        // const index = ifelse.findIndex(element => element.id === clicknode);
-        // //
-        // const Dom = ifelse[index].textContent;
-
-        // //判斷editorText要如何變更
-        // const edittext = editorText;
-        // const num = 0;
-        // let edgecount = [];
-        // //判斷edge在text中的位置
-        // for (var i = 0; i < nodesType.length; i++) {
-        //     let id = nodesType[i];
-
-        //     if (id.includes("edge_")) {
-        //         let Dom = d3.selectAll('polygon[id^="edge_"]').nodes();
-        //         const index = Dom.findIndex(element => element.id === id) + 1;
-        //         edgecount.push(index)
-        //     } else if (id.includes("altesle_")) {
-        //         let Dom = d3.selectAll('rect[id^="altesle_"]').nodes();
-        //         const { index1, index2 } = this.findTextIndices(text, Dom, "end", index + 1);
-        //         edgecount.push(index1, index2)
-        //     }
-        // }
-
-        // //點擊的是第幾個
-        // console.log(index)
-        // //框住的元素
-        // console.log(edgecount)
-        // const { text1Index, text2Index } = this.findTextIndices(text, Dom, "end", index + 1);
-        // console.log(text, text1Index, text2Index, text1Index)
-        // const newStr = this.restructureArray(text, text1Index, text2Index, edgecount);
-        // console.log(newStr)
-        // this.props.witreToEdit(newStr)
+        //點擊的是第幾個
+        console.log(index)
+        //框住的元素
+        console.log(edgecount)
+        const { text1Index, text2Index } = this.findTextIndices(text, Dom, "end", index + 1);
+        console.log(text, text1Index, text2Index, text1Index)
+        const newStr = this.restructureArray(text, text1Index, text2Index, edgecount);
+        console.log(newStr)
+        this.props.witreToEdit(newStr)
 
 
         //
-        this.reWriteEditorText(clickNodeIndex, Elementindex, editorText)
     }
 
 
     //根據框住的元素判斷Editor要怎麽寫
     //editor字串，位置，元素
-    reWriteEditorText(clickNodeIndex, Elementindex, editorText) {
-        console.log(clickNodeIndex, Elementindex, editorText)
-        let newIndex = [];
-        let text = editorText;
-        for (var i = 0; i < Elementindex.length; i++) {
-            console.log(typeof Elementindex[i])
-            if (typeof Elementindex[i] === "object") {
-
-                console.log()
-                newIndex.push(Elementindex[i][0] - 1)
-                newIndex.push(Elementindex[i][1] - 1)
-            } else {
-                newIndex.push(Elementindex[i])
-
-            }
-
-        }
-        let max = Math.max(...newIndex);
-        let min = Math.min(...newIndex);
-
-        const copy1 = editorText[clickNodeIndex[0] - 1]
-        const copy2 = editorText[clickNodeIndex[1] - 1]
-        let tempArray = [];
-        for (let i = 0; i < editorText.length; i++) {
-            // 在 min 的上一行插入 copy1
-            if (i === min) {
-                tempArray.push(copy1);
-            }
-            // 在 max 的下一行插入 copy2
-            if (i === max) {
-                tempArray.push(copy2);
-            }
-            // 添加当前行，除非它是 copy1 或 copy2
-            if (i !== clickNodeIndex[0] - 1 && i !== clickNodeIndex[1] - 1) {
-                tempArray.push(editorText[i]);
-            }
-        }
-
-        // 用临时数组替换原始数组
-        editorText = tempArray;
-
-        this.props.witreToEdit(editorText.join('\n'))
-        console.log(editorText)
-
+    reWriteEditorText = (text, num, node) => {
 
     }
-
 
 
     ifelsepDbClick = (event) => {
@@ -3009,7 +2890,6 @@ end`
 
         let num1 = 0;
         for (var i = text1Index; i < lines.length; i++) {
-            console.log(lines[i])
             if (lines[i].includes(text2)) {
                 break;
             } else if (lines[i].includes(text1)) {
@@ -3099,17 +2979,185 @@ end`
 
         img.src = url;
     };
+    //////////////////////
+    //處理右鍵菜單
+    //點擊的元素
+    handleSvgContextMenu = (event) => {
+        console.log(event.target)
+        // 檢查是否點擊了特定的 SVG text 元素
+        if (event.target.getAttribute("type") === 'node') {
+            // 更新狀態以改變上下文菜單的項目
+            this.setState({ contextMenuForText: "node" });
+        } else {
+            // 重置菜單狀態
+            this.setState({ contextMenuForText: null });
+        }
+    }
+    //尋找點擊元素的rect
+    contextMenuRect = (e) => {
+        const elementId = e.target.getAttribute("id")
+        const selectRect = d3.select(`rect#${elementId}`).node().getAttribute("Line");
+        const selectAllRect = d3.selectAll(`rect[Line="${selectRect}"]`).nodes();
+        this.addNodeRect(selectAllRect);
 
+    }
+    ////單擊元素添加虛綫框
+    clickAddNodeRect = (e) => {
+        const container = (d3.select(this.containerRef.current)).select('svg')
+    }
+    ////為右鍵元素添加虛綫框
+    addNodeRect = (e) => {
+        const container = (d3.select(this.containerRef.current)).select('svg')
+        console.log(d3.selectAll('#edge_7').nodes()[1])
+        const node1 = e[0];
+        const node2 = e[1];
+        console.log()
+        if (this.state.ctrlType) {
+
+        } else {
+            container.selectAll("#xuxian").remove()
+
+        }
+        this.tianjiaXuxian(node1);
+        this.tianjiaXuxian(node2)
+    }
+
+    //添加虛綫
+    tianjiaXuxian = (element) => {
+        this.state.node.push(element);
+        const container = (d3.select(this.containerRef.current)).select('svg')
+        const x = element.getAttribute("x");
+        const y = element.getAttribute("y");
+        const height = element.getAttribute("height");
+        const width = element.getAttribute("width");
+
+
+
+        container.append('rect')
+            .attr('id', `xuxian`)
+            .attr('x', x)
+            .attr('y', y)
+            .attr('height', height)
+            .attr('width', width)
+            .style('fill', 'none')
+            .style('stroke', 'black')
+            .style('stroke-width', '1px')
+            .style('stroke-dasharray', '5,2')
+    }
+
+    handleKeyDown = (event) => {
+
+        if (event.ctrlKey) {
+            console.log(event)
+            this.setState({ ctrlType: true });
+        }
+    };
+
+    handleKeyUp = (event) => {
+        if (event.key === 'Control') {
+            this.setState({ ctrlType: false });
+        }
+    };
+    handleContextMenuClick = (e, data) => {
+        if (data.action) {
+            this.deleteNode(data)
+        }
+
+    }
+    ///刪除虛綫元素
+    deleteNode = (e) => {
+        const nodes = this.state.node;
+        console.log(nodes)
+        const arry = this.props.EditorText.split("\n");
+        const editorText = arry.map(element => element.trim());
+        let deleteNodeIndex = [];
+        const pattern = /(?:->|<-|-->|<--|\s+)/;
+        let num = 1;
+        for (var i = 0; i < nodes.length; i += num) {
+            if (nodes[i].nodeName === 'rect') {
+                num = 2;
+                const node1 = nodes[i].getAttribute("id");
+                console.log(node1)
+                console.log(d3.select(`text#${node1}`).node())
+                const text1 = d3.select(`text#${node1}`).node().textContent;
+                const node2 = nodes[i + 1].getAttribute("id");
+                const text2 = d3.select(`text#${node2}`).node();
+                console.log(text1, text2)
+                for (var j = 0; j < editorText.length; j++) {
+                    console.log(text1)
+                    if (editorText[j] === `participant ${text1}`) {
+
+                        deleteNodeIndex.push(j);
+
+                    } else if (editorText[j].split(pattern).length > 1) {
+                        console.log(editorText[j])
+                        const node = editorText[j].split(pattern);
+                        console.log(node)
+                        if (node[0] === text1 || node[3] === text1) {
+                            deleteNodeIndex.push(j)
+                        }
+
+                    }
+                }
+
+
+            }
+        }
+        deleteNodeIndex.sort((a, b) => b - a);
+        for (var i = 0; i < deleteNodeIndex.length; i++) {
+            editorText.splice(deleteNodeIndex[i], 1);
+
+        }
+        this.setState({ node: [] })
+        console.log(deleteNodeIndex)
+        deleteNodeIndex.length = 0;
+        this.props.witreToEdit(editorText.join('\n'))
+
+    }
+    renderContextMenuItems() {
+        if (this.state.contextMenuForText === "node") {
+            return (
+                <>
+                    <MenuItem className='MenuItem' data={{ action: 'textAction1' }} onClick={this.handleContextMenuClick}>
+                        Text Menu Item 1
+
+                    </MenuItem>
+                    <MenuItem className='MenuItem' data={{ action: 'Delete' }} onClick={this.handleContextMenuClick}>
+                        Delete
+                    </MenuItem>
+
+                </>
+            );
+        } else if (this.state.contextMenuForText === null) {
+            return (
+                <>
+                    <MenuItem className='MenuItem' data={{ action: 'action1' }} onClick={this.handleContextMenuClick}>
+                        Menu Item 1
+                    </MenuItem>
+                    <MenuItem className='MenuItem' data={{ action: 'action2' }} onClick={this.handleContextMenuClick}>
+                        Menu Item 2
+                    </MenuItem>
+                </>
+            );
+        }
+    }
 
     render() {
 
         return (
             <div
                 id="editDiv"
-                ref={this.containerRef}
+                ref={this.editRef}
                 onDragOver={this.handleDragOver}
                 onDrop={this.handleDrop}
             >
+                <ContextMenuTrigger id="svgContextMenu">
+                    <div ref={this.containerRef} ></div>
+                </ContextMenuTrigger>
+
+                <ContextMenu id="svgContextMenu" className="customContextMenu">
+                    {this.renderContextMenuItems()}
+                </ContextMenu>
 
                 {this.state.textDoubleClick && (
                     <input
@@ -3126,17 +3174,7 @@ end`
                 )
 
                 }
-                {this.state.showContextMenu && (
-                    <ContextMenu id="svg_context_menu" style={{ position: 'absolute', top: this.state.yPos, left: this.state.xPos }}>
-                        <MenuItem data={{ item: 'item1' }} onClick={this.handleItemClick}>
-                            菜单项1
-                        </MenuItem>
-                        <MenuItem data={{ item: 'item2' }} onClick={this.handleItemClick}>
-                            菜单项2
-                        </MenuItem>
-                        {/* 其他菜单项 */}
-                    </ContextMenu>
-                )}
+
             </div>
 
         );

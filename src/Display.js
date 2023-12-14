@@ -13,7 +13,7 @@ class DisplayArea extends React.Component {
                 edit: true,
                 tree: true,
             },
-            selectedOption: 'ClassDiagram', // 默认选择 'a'
+            selectedOption: 'SequenceDiagram', // 默认选择 'a'
             showErrorMsg: false,
         };
     }
@@ -96,6 +96,7 @@ class DisplayArea extends React.Component {
                 <select value={selectedOption} onChange={this.handleSelectChange}>
                     <option value="SequenceDiagram">Sequence Diagram</option>
                     <option value="ClassDiagram">Class Diagram</option>
+                    <option value="UseCase">Use CaseDiagram</option>
                 </select>
                 {/* {selectedOption === 'SequenceDiagram' ? <SequenceDiagram /> : <UseCaseDiagram />} */}
             </div>

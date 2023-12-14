@@ -52,6 +52,8 @@ class ClassDiagram extends React.Component {
             mouseType: "",
             //箭頭形態
             arrowType: "",
+            //鼠標拖入時閃爍狀態
+            isBlinking: false
         };
         this.dragging = false;
         this.zoomScale = 1;
@@ -142,8 +144,6 @@ class ClassDiagram extends React.Component {
             //editpanel的大小
             const x = this.state.dimensions.width;
             const y = this.state.dimensions.height;
-
-
             const container = d3.select(this.containerRef.current);
             const tempContainer = d3.create("div").html(this.state.svgContent);
             const svgElement = tempContainer.select("svg");
@@ -152,13 +152,12 @@ class ClassDiagram extends React.Component {
 
             currentStyle = currentStyle.replace(/width:\s*\d+\s*px;/, `width:${x};`);
             currentStyle = currentStyle.replace(/height:\s*\d+\s*px;/, `height: ${y};`);
-
             // Step 4: Set the modified style back to the SVG element
             svgElement.attr("style", currentStyle);
             this.interval = setInterval(() => {
                 this.setState({
                     svgContainer: (d3.select(this.containerRef.current)).select('svg'),
-                    editortext: this.props.EditorText.split("\n")
+                    editortext: this.props.EditorText.replace(/\r/g, '').split("\n")
                 })
                 this.reMakeAllDom(container);
                 this.setState({ num: 0 });
@@ -185,10 +184,15 @@ class ClassDiagram extends React.Component {
                     .on("mouseover", this.MouseOver)
                 // .on("mouseout", this.MouseOut)
                 const id = node.getAttribute("id");
-                const ChildNodes = node.childNodes
+                const ChildNodes = node.childNodes;
+                d3_select(ChildNodes[0])
+                    .attr("type", `classNode`);
                 for (var j = 1; j < ChildNodes.length; j++) {
                     const Dom = ChildNodes[j];
-                    d3_select(Dom).attr("id", `${id}`);
+                    d3_select(Dom)
+                        .attr("id", `${id}`)
+
+
                 }
                 mynodes.push(ChildNodes);
 
@@ -201,7 +205,6 @@ class ClassDiagram extends React.Component {
 
     //獲取數字id
     nodeType = () => {
-        console.log(this.state.num)
         this.setState(prevState => ({ num: prevState.num + 1 }))
         return this.state.num
     }
@@ -214,11 +217,11 @@ class ClassDiagram extends React.Component {
         const nodes = this.state.myNode;
         for (var i = 0; i < nodes.length; i++) {
             const node = nodes[i];
+            console.log(node)
             let node1 = null;
             let node2 = null;
             let node3 = null;
             const container = this.state.svgContainer;
-            console.log(node)
             //
             let textHeight = 0;
             let textwidth = 0;
@@ -281,8 +284,6 @@ class ClassDiagram extends React.Component {
 
                         let rect = node3.getBoundingClientRect()
                         var leftBottom = { x: rect.left, y: rect.bottom };
-                        console.log(leftBottom)
-                        console.log(node3x, node3y, node3Height, node3Width)
                         container.append('rect')
                             .attr('id', `${id}:title:${nodeNum}`)
                             .attr('x', node3x)
@@ -316,7 +317,7 @@ class ClassDiagram extends React.Component {
                     node3 = e
 
                 }
-                console.log(e)
+
             }
         }
 
@@ -333,7 +334,6 @@ class ClassDiagram extends React.Component {
         // 计算鼠标在SVG容器中的位置
 
         const [x, y] = d3.pointer(event);
-        console.log(x, y)
 
         // 创建线条元素
         this.line = svg.append("line")
@@ -355,11 +355,15 @@ class ClassDiagram extends React.Component {
         // 计算鼠标在SVG容器中的位置
         const clickx = this.state.clickNode1.getAttribute('x1')
         const clicky = this.state.clickNode1.getAttribute('y1')
+        const svg = this.state.svgContainer;
 
         const x = event.x
         const y = event.y
 
         if (clickx - x > 10 || clickx - x < 10) {
+            //這邊選擇拖動時要閃爍的元素
+            const node = svg.selectAll("g[id^='#elem_Note']");
+            console.log(node.nodes())
             this.setState({ mouseType: "move" })
             this.line
                 .attr("x2", x)
@@ -367,6 +371,8 @@ class ClassDiagram extends React.Component {
         } else {
             this.setState({ mouseType: "click" })
         }
+
+
 
     }
 
@@ -388,9 +394,6 @@ class ClassDiagram extends React.Component {
         //點擊的node和停止拖拽的node
         const editorText = this.state.editortext;
         const node1 = this.state.clickNode1.getAttribute("id").split(":");
-
-
-        console.log(e.sourceEvent.target.getAttribute("id"))
         //如果兩個type是一樣的
         if (e.sourceEvent.target.getAttribute("id") === null) {
 
@@ -417,7 +420,6 @@ class ClassDiagram extends React.Component {
         const id = event.currentTarget.getAttribute("id").split(':')
         const rectid = id[0].split("_");
         this.setState({ mouseType: "" })
-
         var drag = d3.drag()
             .on("start", this.dragstarted.bind(this)) // 拖拽开始时的事件处理器
             .on("drag", this.mousemoved.bind(this))      // 拖拽进行中的事件处理器
@@ -455,9 +457,9 @@ class ClassDiagram extends React.Component {
             textDoubleClick: true,
 
         });
-        console.log(nodeid)
+
         const nodes = this.getClickNodeClass(id);
-        console.log(nodes)
+
         if (type === 'title') {
             this.setState({ clickNodeType: type, clickNode: nodes })
         } else if (type === 'var') {
@@ -475,8 +477,7 @@ class ClassDiagram extends React.Component {
         const input = inputValue;
         //獲取index
         const { index, str } = this.findIndex1(nodeText);
-        console.log(this.state.editortext)
-        console.log(index, str)
+
         if (str === 'no') {
             let newText = `{
 ${inputValue}
@@ -513,18 +514,18 @@ ${inputValue}()
     //
     findIndex1 = (text) => {
         const text1 = this.state.editortext
-        const Editortext = text1;
-        console.log(Editortext)
+        const Editortext = text1
+        console.log(text)
         let index = 0;
         let str = "";
 
 
         let findText = 0;
         for (var x = 0; x < Editortext.length; x++) {
-            console.log(Editortext[x].split(' ').length)
+
             if (Editortext[x].split(' ').length > 1) {
                 let str = Editortext[x].split(' ');
-                console.log(str[1])
+                console.log(str)
                 if (str[1].includes("{")) {
 
                     let newStr = str[1].split('{')
@@ -543,8 +544,8 @@ ${inputValue}()
             }
 
         }
+
         const nodeName = Editortext[findText].split(' ')[0]
-        console.log(nodeName)
 
         for (var i = 0; i < Editortext.length; i++) {
             const nodetext = Editortext[i]
@@ -569,7 +570,7 @@ ${inputValue}()
 
         }
 
-        console.log(str)
+
         return { index, str };
     }
     findIndex2 = (text) => {
@@ -702,18 +703,26 @@ ${inputValue}()
     //     console.log("up")
     // }
 
-    // handleDragOver = (e) => {
-    //     e.preventDefault(); // 防止預設的放置行為
+    handleDragOver = (e) => {
+        e.preventDefault(); // 防止預設的放置行為
+        if (!this.state.isBlinking) {
+            d3.selectAll("[type='classNode']")
+                .style('animation', 'blink 2s infinite')
+
+            // 更新状态以反映已经触发了闪烁效果
+            this.setState({ isBlinking: true });
+        }
 
 
-
-    // };
+    };
 
     handleDrop = (e) => {
         e.preventDefault();
         const data = e.dataTransfer.getData('text/plain');  // 獲取傳遞的字串
         let rect = d3.selectAll(".group");
-
+        this.setState({ isBlinking: false });
+        d3.selectAll("[type='classNode']")
+            .style('animation', 'none');
 
         if (data === "Class") {
             const text = `class class${this.TextNum()}`
@@ -755,7 +764,22 @@ ${inputValue}()
             const text = `struct Struct${this.TextNum()}`
             this.props.shapeText(text)
         }
-        console.log(data)
+        else if (data === "Note") {
+
+            console.log(e.target)
+            if (e.target.nodeName === "svg") {
+                const text = `note "write some note N${this.TextNum()}" as Note${this.TextNum()}`;
+                this.props.shapeText(text)
+            } else {
+                const text = `note left : "write some note N${this.TextNum()}" as Note${this.TextNum()}`;
+                this.noteFunction(e.target, text)
+            }
+
+
+            // this.props.shapeText(text)
+        }
+
+
         // rect.classed("flash", false);
         // let line = d3.selectAll(".rectLine");
         // line.classed("flash", false);
@@ -765,6 +789,32 @@ ${inputValue}()
 
         // 在此處根據 `data` 做你想要的操作，例如將圖片加入到此組件中
     };
+    ///尋找note的function,e為元素
+    noteFunction = (e, text) => {
+        const editortext = this.state.editortext;
+        const node = e.getAttribute("id").split(":");
+        const id = node[0].split("_");
+        let index = 0;
+        for (var i = 0; i < editortext.length; i++) {
+            const text = editortext[i].split(' ');
+            if (text.length > 1) {
+                console.log(id)
+                if (text[1].includes(id[1])) {
+                    console.log(text[1])
+                    index = i;
+                    break;
+                }
+            }
+
+        }
+        this.insertNoteText(index, text);
+    }
+    insertNoteText = (index, text) => {
+        const editortext = this.state.editortext;
+        editortext.splice(index + 1, 0, text);
+        this.props.witreToEdit(editortext.join("\n"))
+    }
+
 
     //尋找text在ediotrtext中的位置
     findTextInEditor = (text, inputValue) => {

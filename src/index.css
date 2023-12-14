@@ -233,6 +233,38 @@ li a:hover {
     overflow: hidden;
 }
 
+.customContextMenu {
+    width: 10%;
+    height: 10%;
+    border-radius: 10px;
+    background-color: #FBF5DA;
+    /* 白色背景 */
+    /* 圓角的大小 */
+    border: 3px solid #b9b8b8;
+    /* 黑色邊框 */
+    /* 或您想要的任何尺寸 */
+    /* 其他樣式 */
+}
+
+.customContextMenu .MenuItem {
+    border-radius: 5px;
+    background-color: #FBF5DA;
+    /* 白色背景 */
+    /* 子元素的圓角 */
+    border: 2px solid #f7f0ce;
+    text-align: center;
+    /* 水平居中文本 */
+    /* 子元素的黑色邊框 */
+    /* 其他樣式 */
+}
+
+.customContextMenu .MenuItem:hover {
+    background-color: grey;
+    /* 鼠標懸停時的背景顏色 */
+}
+
+
+
 
 #resetBtn {
     position: absolute;
@@ -874,6 +906,23 @@ footer {
     display: block;
 }
 
+.hiddenSubMenu {
+    display: none;
+}
+
+.visibleSubMenu {
+    display: block;
+}
+
+.react-contextmenu-item--active .react-contextmenu-submenu {
+    display: none;
+}
+
+.react-contextmenu-item:hover .react-contextmenu-submenu {
+    display: block;
+}
+
+
 
 /* ClassDiagram 的 css*/
 @keyframes blink {
@@ -887,6 +936,7 @@ footer {
         fill-opacity: 0.5;
     }
 }
+
 
 
 

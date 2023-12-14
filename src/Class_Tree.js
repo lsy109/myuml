@@ -111,6 +111,7 @@ class ClassTree extends React.Component {
                         {this.renderShapeItem("protocol", "Protocol")}
                         {this.renderShapeItem("Stereotype", "Stereotype")}
                         {this.renderShapeItem("struct", "Struct")}
+                        {this.renderShapeItem("note", "Note")}
 
 
 
