@@ -54,15 +54,15 @@ class Graph extends React.Component {
 
             //綫頭拖拽
             line: null,
-            arrow: null,
-            resetLine: null,
-
+            //點擊時，比較靠近的rectLine
+            polygonRectLine: null,
             //ctrl鍵狀態
             ctrlType: false,
             //虛框的元素
-            node: []
-        };
+            node: [],
 
+        };
+        this.line = null;
         this.dragging = false;
         this.img = null;
         this.zoomScale = 1;
@@ -198,6 +198,8 @@ class Graph extends React.Component {
                 this.reMakeAllDom(container);
                 this.getDomInEditor(container);
                 this.setState({ nodeNum: 0, svgContainer: container, });
+                this.CombinedMessagesRect()
+                this.arrowRect()
                 clearInterval(this.interval);
             }, 1);
 
@@ -974,7 +976,6 @@ class Graph extends React.Component {
         container.on("click", this.resetAllBoolean.bind(this));
         container.selectAll("svg").on("wheel", this.mouseWheel.bind(this));
         //                          
-
         container.selectAll("*").on("click", this.DomLine);
 
         //右鍵
@@ -1146,6 +1147,7 @@ class Graph extends React.Component {
 
         })
         container.selectAll("#xuxian").remove()
+        container.selectAll('rect[id="lineRect"]').style('stroke-width', '0px')
 
         // console.log("ll")
 
@@ -1403,60 +1405,7 @@ class Graph extends React.Component {
         }
     }
 
-    ////polygon拖拽
-    polygonDrog = (e) => {
-        const svg = (d3.select(this.containerRef.current)).select('svg');
-        //獲取line元素
-        const elementID = e.target.getAttribute("id");
-        let line = svg.selectAll(`line[id = ${elementID}]`);
-        let arrow = svg.selectAll(`polygon[id = ${elementID}]`);
-        this.setState({ line: line, arrow: arrow, resetLine: line })
-        svg.on("mousemove", this.mousemoved);
-        svg.on("mouseup", this.polygonDrogend);
-    }
-    //拖拽結束
-    polygonDrogend = (e) => {
-        (d3.select(this.containerRef.current)).select('svg').on("mousemove", null);
-        let rectline = this.state.svgContainer.selectAll(".rectLine");
-        rectline.attr("pointer-events", "auto");
-        rectline.classed("flash", false);
 
-        const line = this.state.line;
-        const resetLine = this.state.resetLine;
-
-        const resetx = resetLine.attr("x2");
-        const resety = resetLine.attr("y2");
-
-        line
-            .attr('x2', resetx)
-            .attr('y2', resety)
-
-        console.log(e.target)
-
-
-    }
-    polygonDrogend1 = (e) => {
-        this.state.svgContainer.on("mousemove", null);
-        let line = this.state.svgContainer.selectAll(".rectLine");
-        line.attr("pointer-events", "auto");
-        line.classed("flash", false);
-    }
-    //鼠標開始拖拽
-    mousemoved = (event) => {
-        let rectline = this.state.svgContainer.selectAll(".rectLine");
-        rectline.attr("pointer-events", "auto");
-        rectline.classed("flash", true);
-        const [x, y] = d3.pointer(event);
-        const line = this.state.line;
-        const polygon = this.state.arrow;
-        console.log(x)
-        const svg = (d3.select(this.containerRef.current)).select('svg');
-
-        line.attr('x2', x)
-            .attr('y2', y)
-
-
-    }
 
     //
     writeFunction = (node1, node2) => {
@@ -1897,7 +1846,8 @@ end`
                 let id1 = line1.attr("id")
                 let id2 = line2.attr("id")
 
-                console.log(id1, id2)
+                let line1x = line1.attr('x1')
+                let line2x = line2.attr('x1')
 
                 // 獲取線條的坐標
                 let x1 = parseFloat(line1.attr("x1"));
@@ -1927,6 +1877,11 @@ end`
 
                         if (isInRect(x1, y1) && isInRect(x2, y2)) {
                             // 这里处理在矩形框内的<line>元素
+                            console.log(line1x, line2x)
+                            console.log(x1, x2)
+                            //先獲取rectLine的x坐標
+
+                            //判斷坐標和line坐標的x1，x2
                             line.attr("beforeRectLine", `${id1}`)
                                 .attr("afterRectLine", `${id2}`)
                         }
@@ -1960,48 +1915,6 @@ end`
     };
 
 
-    //新的為元素添加添加虛綫框（綫條）
-    polygon = (event) => {
-        const container = (d3.select(this.containerRef.current)).select('svg')
-        // 
-        //獲取點擊元素的id
-        const getEventID = event.target.getAttribute("id");
-        const clickArrow = container.selectAll(`[id="${getEventID}"]`).nodes();
-        let x = 0;
-        let y = 0;
-        let height = 0;
-        let width = 0;
-        for (var i = 0; i < clickArrow.length; i++) {
-            const element = clickArrow[i];
-            console.log(element)
-            if (element.nodeName === "line") {
-
-                if (container.select(`text[id="${getEventID}"]`).node()) {
-                    const textElement = container.select(`text[id="${getEventID}"]`).node();
-                    x = parseFloat(element.getAttribute("x1"));
-                    y = parseFloat(textElement.getAttribute("y"));
-                    width = parseFloat(element.getAttribute("x2")) - x - 8;
-                    const texty = parseFloat(textElement.getAttribute("x"));
-                    height = texty - parseFloat(element.getAttribute("x1"));
-
-                }
-
-            }
-
-        }
-        container.append('rect')
-            .attr('id', `xx`)
-            .attr('x', x)
-            .attr('y', y)
-            .attr('height', 8)
-            .attr('width', width)
-            .style('fill', 'none')
-            .style('stroke', 'black')
-            .style('stroke-width', '1px')
-            .style('stroke-dasharray', '5,2')
-        console.log(x, y, height, width)
-
-    }
 
 
     //為元素添加虛綫框
@@ -2988,7 +2901,13 @@ end`
         if (event.target.getAttribute("type") === 'node') {
             // 更新狀態以改變上下文菜單的項目
             this.setState({ contextMenuForText: "node" });
-        } else {
+        }
+        else if (event.target.getAttribute('id') === 'lineRect') {
+            const node = d3.select(event.target)
+            node.style('stroke-width', '1px')
+            this.setState({ contextMenuForText: "arrow" });
+        }
+        else {
             // 重置菜單狀態
             this.setState({ contextMenuForText: null });
         }
@@ -3059,11 +2978,27 @@ end`
         }
     };
     handleContextMenuClick = (e, data) => {
-        if (data.action) {
-            this.deleteNode(data)
+        console.log(data.action)
+        console.log(this.state.contextMenuForText)
+        if (this.state.contextMenuForText === 'node') {
+            if (data.action === "delete") {
+                this.deleteNode(data)
+            }
+
+
+        } else if (this.state.contextMenuForText === 'arrow') {
+
+            if (data.action === "delete") {
+                this.delectArrow(data)
+            } else if (data.action === "transform") {
+                this.transformArrow(data)
+            }
+
         }
 
+
     }
+
     ///刪除虛綫元素
     deleteNode = (e) => {
         const nodes = this.state.node;
@@ -3114,6 +3049,252 @@ end`
         this.props.witreToEdit(editorText.join('\n'))
 
     }
+    //刪除虛綫的箭頭元素
+    delectArrow = (e) => {
+        //先獲取箭頭id
+        const getArrowId = e.target.getAttribute('arrowId');
+        //搜索箭頭,搜尋箭頭的text
+        const arrow = d3.select(`line#${getArrowId}`).node();
+        const arrowtext = d3.select(`text#${getArrowId}`).node().textContent;
+        console.log(arrowtext)
+        //尋找箭頭的兩個rect
+        const getrectLineid1 = arrow.getAttribute("beforeRectLine");
+        const getrectLineid2 = arrow.getAttribute("afterRectLine");
+
+        const getrectLineNode1 = d3.select(`rect[Line = "${getrectLineid1}"]`).node().getAttribute("id")
+        const getrectLineNode2 = d3.select(`rect[Line = "${getrectLineid2}"]`).node().getAttribute("id")
+        //找到node text
+        const text1 = d3.select(`text#${getrectLineNode1}`).node().textContent
+        const text2 = d3.select(`text#${getrectLineNode2}`).node().textContent
+        //尋找text位置，替換箭頭
+
+        let editorText = this.props.EditorText.split("\n");
+        for (var i = 0; i < editorText.length; i++) {
+            let text = editorText[i]
+            if (text.includes(text1) && text.includes(text2) && text.includes(arrowtext)) {
+                editorText.splice(i, 1);
+            }
+        }
+        this.props.witreToEdit(editorText.join('\n'))
+    }
+    arrowRect = (e) => {
+        const container = (d3.select(this.containerRef.current)).select('svg');
+        //首先尋找所有line的id
+        //為箭頭的綫條添加透明rect
+        const lineElement = d3.selectAll('line[id*="edge"]').nodes();
+        for (var i = 0; i < lineElement.length; i++) {
+            const element = lineElement[i]
+            const id = element.getAttribute("id");
+            const lineText = d3.select(`text[id="${id}"]`).node();
+            const x = element.getAttribute("x1");
+            const y = lineText.getAttribute('y')
+            const width = element.getAttribute('x2') - element.getAttribute('x1') - 5;
+            const height = y
+            container.append('rect')
+                .attr('id', `lineRect`)
+                .attr('arrowId', `${id}`)
+                .attr('x', x)
+                .attr('y', y)
+                .attr('height', 8)
+                .attr('width', width)
+                .attr("fill-opacity", 0)
+                .style('stroke', 'black')
+                .style('stroke-width', '0px')
+                .style('stroke-dasharray', '5,2')
+
+        }
+
+        //為箭頭的頭部添加rect
+        const polygonElement = d3.selectAll('polygon[id*="edge"]').nodes();
+
+        for (var i = 0; i < polygonElement.length; i++) {
+            const polygon = (polygonElement[i]);
+            const id = polygon.getAttribute('id')
+            const box = polygon.getBBox();
+            const x = box.x
+            const y = box.y
+            const width = box.width;
+            const height = box.height;
+            console.log(id)
+            container.append('rect')
+                .attr('id', `polygonRect`)
+                .attr('arrowId', `${id}`)
+                .attr('x', x)
+                .attr('y', y)
+                .attr('height', height)
+                .attr('width', width)
+                .attr("fill-opacity", 0)
+                .style('stroke', 'black')
+                .style('stroke-width', '0px')
+                .style('stroke-dasharray', '5,2')
+                .on('mouseover', function () {
+                    d3.select(this).style('cursor', 'crosshair')
+                })
+                .on('mousedown', this.polygonDrog.bind(this))
+        }
+
+
+    } ////polygon拖拽
+    polygonDrog = (e) => {
+        const svg = (d3.select(this.containerRef.current)).select('svg');
+        //獲取line ID
+        const clickPolygonid = e.target.getAttribute('arrowId');
+        const clickPolygon = d3.select(`line#${clickPolygonid}`).node();
+        //獲取點擊時的坐標
+        const [clickX, clickY] = d3.pointer(e);
+        this.line = svg.append('line')          // 创建一个新的line元素
+            .attr('x1', clickX)         // 设置起点的x坐标
+            .attr('y1', clickY)          // 设置起点的y坐标
+            .attr('x2', clickX)         // 设置起点的x坐标
+            .attr('y2', clickY)
+            .attr('stroke', 'black') // 设置线条的颜色
+            .style('stroke-width', '1px')
+            .style('stroke-dasharray', '5,2')
+
+        //找到點擊的位置，判斷起始的rectLine
+        //點擊的line有兩個rectLine
+        const rectLine1id = (clickPolygon.getAttribute('beforeRectLine'));
+        const rectLine2id = (clickPolygon.getAttribute('afterRectLine'));
+        const rectLine1 = d3.select(`line#${rectLine1id}`).node();
+        const rectLine2 = d3.select(`line#${rectLine2id}`).node();
+        //獲取rectLine的坐標
+        const rectLine1X = rectLine1.getAttribute('x1');
+        const rectLine2X = rectLine2.getAttribute('x1');
+
+        //判斷點擊時比較靠近哪個rectLine
+        const total = (parseFloat(rectLine1X) + parseFloat(rectLine2X)) / 2
+
+        if (clickX > total) {
+            this.setState({ polygonRectLine: rectLine1id })
+
+        } else if (clickX < total) {
+            this.setState({ polygonRectLine: rectLine2id })
+
+        }
+
+
+
+
+        this.setState({ line: clickPolygon })
+        svg.on("mousemove", this.mousemoved);
+        svg.on("mouseup", this.polygonDrogend);
+    }
+    //拖拽結束
+    polygonDrogend = (e) => {
+        (d3.select(this.containerRef.current)).select('svg').on("mousemove", null);
+        let rectline = this.state.svgContainer.selectAll(".rectLine");
+        rectline.attr("pointer-events", "auto");
+        rectline.classed("flash", false);
+        const x = this.line.attr('x1')
+        const y = this.line.attr('y1')
+        this.line.attr('x2', x).attr('y2', y)
+        this.line = null
+        //獲取兩個rectLine
+        const line = this.state.line;
+        const rectLine1 = line.getAttribute('be')
+        console.log(line)
+        //獲取rectLine的text，用於判斷是哪個箭頭
+        //獲取兩個rectLine的node
+
+        console.log(e.target)
+
+    }
+
+    //鼠標開始拖拽
+    mousemoved = (event) => {
+        let rectline = this.state.svgContainer.selectAll(".rectLine");
+        rectline.attr("pointer-events", "auto");
+        rectline.classed("flash", true);
+        const [x, y] = d3.pointer(event);
+        this.line.attr('x2', x)
+
+
+    }
+
+    //反轉箭頭
+    transformArrow = (e) => {
+        //先獲取箭頭id
+        const getArrowId = e.target.getAttribute('arrowId');
+        //搜索箭頭,搜尋箭頭的text
+        const arrow = d3.select(`line#${getArrowId}`).node();
+        const arrowtext = d3.select(`text#${getArrowId}`).node().textContent;
+        //尋找箭頭的兩個rect
+        const getrectLineid1 = arrow.getAttribute("beforeRectLine");
+        const getrectLineid2 = arrow.getAttribute("afterRectLine");
+
+        const getrectLineNode1 = d3.select(`rect[Line = "${getrectLineid1}"]`).node().getAttribute("id")
+        const getrectLineNode2 = d3.select(`rect[Line = "${getrectLineid2}"]`).node().getAttribute("id")
+        //找到node text
+        const text1 = d3.select(`text#${getrectLineNode1}`).node().textContent
+        const text2 = d3.select(`text#${getrectLineNode2}`).node().textContent
+        //尋找text位置，替換箭頭
+
+        let editorText = this.props.EditorText.split("\n");
+        for (var i = 0; i < editorText.length; i++) {
+            let text = editorText[i]
+            if (text.includes(text1) && text.includes(text2) && text.includes(arrowtext)) {
+                let str = text;
+                if (str.includes('<--')) {
+                    let newstr = str.replace('<--', '-->');
+                    editorText[i] = newstr;
+                    break;
+
+                } else if (str.includes('-->')) {
+                    let newstr = str.replace('-->', '<--');
+                    editorText[i] = newstr;
+                    break;
+                }
+                else if (str.includes('<-')) {
+                    let newstr = str.replace('<-', '->');
+                    editorText[i] = newstr;
+                    break;
+                }
+                else if (str.includes('->')) {
+                    let newstr = str.replace('->', '<-');
+                    editorText[i] = newstr
+                    break;
+                }
+            }
+        }
+        this.props.witreToEdit(editorText.join('\n'))
+    }
+
+    //組合語言
+    CombinedMessagesRect = (e) => {
+        const container = (d3.select(this.containerRef.current)).select('svg');
+        const element = d3.selectAll('rect[id*="altesle"]').nodes();
+
+
+        for (var i = 0; i < element.length; i++) {
+            const rect = element[i]
+            const type = rect.getAttribute('type');
+            console.log(rect)
+            const x = rect.getAttribute("x");
+            const y = rect.getAttribute('y')
+            const width = rect.getAttribute('width')
+            const height = rect.getAttribute('height')
+            console.log(x, y, width, height)
+
+            console.log(rect)
+            container.append('rect')
+                .attr('id', `CombinedMessagesRect`)
+                .attr('node', `${type}`)
+                .attr('x', x)
+                .attr('y', y)
+                .attr('height', height)
+                .attr('width', width)
+                // .attr('fill', 'red')
+                .attr("fill-opacity", 0)
+                .style('stroke', 'black')
+                .style('stroke-width', '1px')
+                .style('stroke-dasharray', '5,2')
+
+        }
+
+
+    }
+
+
     renderContextMenuItems() {
         if (this.state.contextMenuForText === "node") {
             return (
@@ -3122,13 +3303,32 @@ end`
                         Text Menu Item 1
 
                     </MenuItem>
-                    <MenuItem className='MenuItem' data={{ action: 'Delete' }} onClick={this.handleContextMenuClick}>
+                    <MenuItem className='MenuItem' data={{ action: 'delete' }} onClick={this.handleContextMenuClick}>
                         Delete
                     </MenuItem>
 
                 </>
             );
-        } else if (this.state.contextMenuForText === null) {
+        }
+        else if (this.state.contextMenuForText === "arrow") {
+            return (
+                <>
+                    <MenuItem className='MenuItem' data={{ action: ' arrow1' }} onClick={this.handleContextMenuClick}>
+                        arrow1
+                    </MenuItem>
+                    <MenuItem className='MenuItem' data={{ action: ' arrow2' }} onClick={this.handleContextMenuClick}>
+                        arrow2
+                    </MenuItem>
+                    <MenuItem className='MenuItem' data={{ action: 'transform' }} onClick={this.handleContextMenuClick}>
+                        Transform
+                    </MenuItem>
+                    <MenuItem className='MenuItem' data={{ action: 'delete' }} onClick={this.handleContextMenuClick}>
+                        Delete
+                    </MenuItem>
+                </>
+            );
+        }
+        else if (this.state.contextMenuForText === null) {
             return (
                 <>
                     <MenuItem className='MenuItem' data={{ action: 'action1' }} onClick={this.handleContextMenuClick}>
@@ -3183,8 +3383,17 @@ end`
 
 export default Graph;
 
-
-
+//////////////////////////////////
+//開發小筆記
+//選取帶有指定id的元素、
+// -->d3.select(`line#${getArrowId}`).node()
+//選取所有id帶有特定字串的
+//-->d3.selectAll('line[id*="edge"]').node()
+//尋找自定元素
+//-->d3.select(`rect[Line = "${getrectLineid1}"]`).node()
+//需要append時使用container.append
+//-->const container = (d3.select(this.containerRef.current)).select('svg')
+/////////////////////////////////
 
 
 

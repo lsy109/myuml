@@ -104,7 +104,9 @@ class MainArea extends React.Component {
     //select改變畫面
     selectChangeDiv = (value) => {
         if (value === "SequenceDiagram") {
-            let str = "Bob -> Alice : hello"
+            let str = `Bob -> Alice : hello
+loop
+end`
             this.setState({
                 dotSrc: `@startuml
 participant Bob
