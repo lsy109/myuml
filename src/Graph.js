@@ -77,6 +77,9 @@ class Graph extends React.Component {
             initialY: 0,
             offsetX: 0,
             offsetY: 0,
+            resetx: 0,
+            resety: 0,
+            contextMenuForText: "",
 
 
         };
@@ -184,7 +187,7 @@ class Graph extends React.Component {
 
             const svgAima = this.state.svgContent;
 
-            const container = d3.select(this.editRef.current);
+            const container = d3.select(this.containerRef.current);
 
 
             const tempContainer = d3.create("div").html(svgAima);
@@ -2956,9 +2959,10 @@ end`
     //處理右鍵菜單
     //點擊的元素
     handleSvgContextMenu = (event) => {
-        console.log(event.target)
+
         // 檢查是否點擊了特定的 SVG text 元素
         if (event.target.getAttribute("type") === 'node') {
+            console.log(event.target)
             // 更新狀態以改變上下文菜單的項目
             this.setState({ contextMenuForText: "node" });
         }
@@ -2988,7 +2992,6 @@ end`
     ////為右鍵元素添加虛綫框
     addNodeRect = (e) => {
         const container = (d3.select(this.editRef.current)).select('svg')
-        console.log(d3.selectAll('#edge_7').nodes()[1])
         const node1 = e[0];
         const node2 = e[1];
         console.log()
@@ -3482,25 +3485,24 @@ end`
 
     //組合語言
     CombinedMessagesRect = (e) => {
-        const container = (d3.select(this.containerRef.current)).select('svg');
+        const container = (d3.select(this.editRef.current)).select('svg');
         const element = d3.selectAll('rect[id*="altesle"]').nodes();
 
 
         for (var i = 0; i < element.length; i++) {
             const rect = element[i]
             const type = rect.getAttribute('type');
+            const id = rect.getAttribute('id')
             console.log(rect)
             const x = rect.getAttribute("x");
             const y = rect.getAttribute('y')
             const width = rect.getAttribute('width')
             const height = rect.getAttribute('height')
-            console.log(x, y, width, height)
-
-            console.log(rect)
             container.append('rect')
                 .attr('id', `CombinedMessagesRect`)
                 .attr('class', 'altelseRect')
                 .attr('node', `${type}`)
+                .attr('alt', id)
                 .attr('x', x)
                 .attr('y', y)
                 .attr('height', height)
@@ -3518,6 +3520,7 @@ end`
     arrowmove = (event) => {
         const node = d3.select(event.target);
         const svg = (d3.select(this.editRef.current)).select('svg');
+        this.setState({ resetx: node.attr('x'), resety: node.attr('y') })
         node.style('stroke-width', '1px');
         //獲取id，搜索所有的id的元素
         const getarrowRectId = event.target.getAttribute('arrowId');
@@ -3545,7 +3548,7 @@ end`
         arrowrect.attr('x', newX)
             .attr('y', newY);
 
-        let rectline = this.state.svgContainer.selectAll(".altelseRect");
+        let rectline = (d3.select(this.editRef.current)).selectAll(".altelseRect");
         rectline.attr("pointer-events", "auto");
         rectline.classed("flash", true);
     }
@@ -3556,13 +3559,112 @@ end`
         let rectline = this.state.svgContainer.selectAll(".altelseRect");
         rectline.attr("pointer-events", "auto");
         rectline.classed("flash", false);
-        console.log(e.target)
+        const arrowrect = this.state.arrowRect;
+        arrowrect.attr('x', this.state.resetx)
+            .attr('y', this.state.resety);
 
+        const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
+        if (elementUnderMouse.nodeName === 'rect' && elementUnderMouse.getAttribute('id') === "CombinedMessagesRect") {
+            //獲取對於的是哪個元素
+            const getAltNode = d3.select(`text#${elementUnderMouse.getAttribute('alt')}`).node();
+            const altId = getAltNode.getAttribute('id');
+            //判斷是被拖的是哪個元素
+            const lineElement = d3.select(`text#${arrowrect.node().getAttribute('arrowId')}`).node()
+            const lineNodeElement = d3.select(`line#${arrowrect.node().getAttribute('arrowId')}`).node()
+            const lineText = lineElement.textContent
+            //獲取node text
+            const node1 = d3.select(`rect[Line = "${lineNodeElement.getAttribute('beforeRectLine')}"]`).node();
+            const node2 = d3.select(`rect[Line = "${lineNodeElement.getAttribute('afterRectLine')}"]`).node();
+            const text1 = d3.select(`text#${node1.getAttribute('id')}`).node().textContent;
+            const text2 = d3.select(`text#${node2.getAttribute('id')}`).node().textContent;
+            //判斷是第幾個ifelse
+            const allAltElse = d3.selectAll(`rect[id*="altesle"]`).nodes();
+            let num = 0;
+            for (var i = 0; i < allAltElse.length; i++) {
+                const id = allAltElse[i].getAttribute('id')
+                if (id == altId) {
+                    num = i + 1
+                    break
+                }
+
+            }
+            //editortext要怎麽改
+            console.log(text1, text2, lineText)
+            //想要插入的index
+            const result = this.findMatchingEnd(this.props.EditorText, getAltNode.textContent, num);
+            let index = 0;
+            const editortext = this.props.EditorText.split('\n')
+            //尋找想要插入的字串
+            for (var i = 0; i < editortext.length; i++) {
+                const text = editortext[i];
+                if (text.includes(text1) && text.includes(text2) && text.includes(lineText)) {
+                    index = i;
+                    break;
+                }
+            }
+            const newtext = this.insertBetweenIndices(editortext, index, result.startLine - 1, result.endLine - 1)
+            console.log(newtext)
+            this.props.witreToEdit(newtext.join('\n'))
+
+
+        }
+    }
+    insertBetweenIndices(array, itemIndex, targetIndex1, targetIndex2) {
+        // 检查索引是否有效
+        if (itemIndex < 0 || itemIndex >= array.length ||
+            targetIndex1 < 0 || targetIndex1 >= array.length ||
+            targetIndex2 < 0 || targetIndex2 >= array.length ||
+            itemIndex === targetIndex1 || itemIndex === targetIndex2) {
+            return 'Invalid indices';
+        }
+
+        // 拷贝原数组，以避免直接修改原数组
+        let newArray = [...array];
+
+        // 移除指定索引的元素
+        let item = newArray.splice(itemIndex, 1)[0];
+
+        // 计算插入位置
+        let insertIndex = Math.min(targetIndex1, targetIndex2) +
+            Math.abs(targetIndex1 - targetIndex2) - 1;
+
+        // 插入元素
+        newArray.splice(insertIndex, 0, item);
+
+        return newArray;
+    }
+    //
+    findMatchingEnd(inputStr, targetStr, num) {
+        const lines = inputStr.split('\n');
+        let count = 0;
+        let stack = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].trim() === targetStr) {
+                count++;
+                if (count === num) {
+                    stack++;
+                    for (let j = i + 1; j < lines.length; j++) {
+                        if (lines[j].trim() === targetStr) {
+                            stack++;
+                        } else if (lines[j].trim() === 'end') {
+                            stack--;
+                            if (stack === 0) {
+                                return { startLine: i + 1, endLine: j + 1 };
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        return null;
     }
 
 
     renderContextMenuItems() {
-        console.log()
+        console.log(this.state.contextMenuForText)
         if (this.state.contextMenuForText === "node") {
             return (
                 <>
@@ -3632,7 +3734,7 @@ end`
                 </ContextMenuTrigger>
 
                 <ContextMenu id="svgContextMenu" className="customContextMenu" >
-                    {this.renderContextMenuItems}
+                    {this.renderContextMenuItems()}
                 </ContextMenu>
 
                 {this.state.textDoubleClick && (
