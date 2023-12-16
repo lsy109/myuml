@@ -200,6 +200,7 @@ class Graph extends React.Component {
                 this.setState({ nodeNum: 0, svgContainer: container, });
                 this.CombinedMessagesRect()
                 this.arrowRect()
+                this.addRectLineToArrow()
                 clearInterval(this.interval);
             }, 1);
 
@@ -1161,7 +1162,51 @@ class Graph extends React.Component {
         return this.state.textNum
     }
 
+    /////
+    //添加rectLine，和arrow的關係
+    addRectLineToArrow = () => {
+        // 尋找到所有rectLine
+        const allRectLine = d3.selectAll('line[id*="rectLine"]').nodes();
+        const allEdge = d3.selectAll('line[id*="edge"]').nodes();
 
+        // 輸出所有edge和rectLine，這是用於調試的
+        console.log(allEdge, allRectLine);
+
+        allEdge.forEach(edge => {
+            const edgex1 = parseFloat(edge.getAttribute('x1'));
+            const edgex2 = parseFloat(edge.getAttribute('x2'));
+
+            let closestRectLineToX1 = null;
+            let closestRectLineToX2 = null;
+            let minDistanceToX1 = Infinity;
+            let minDistanceToX2 = Infinity;
+
+            allRectLine.forEach(rectLine => {
+                const rectLinex = parseFloat(rectLine.getAttribute('x1'));
+                const distanceToX1 = Math.abs(rectLinex - edgex1);
+                const distanceToX2 = Math.abs(rectLinex - edgex2);
+
+                // 更新最接近edgex1的rectLine
+                if (distanceToX1 < minDistanceToX1) {
+                    closestRectLineToX1 = rectLine;
+                    minDistanceToX1 = distanceToX1;
+                }
+
+                // 更新最接近edgex2的rectLine
+                if (distanceToX2 < minDistanceToX2) {
+                    closestRectLineToX2 = rectLine;
+                    minDistanceToX2 = distanceToX2;
+                }
+            });
+
+            // 在這裡可以根據需求進行額外操作，例如打印信息或更新DOM元素
+            // console.log(`Edge ${edge.id} is closest to RectLine ${closestRectLineToX1.id} at x1 and RectLine ${closestRectLineToX2.id} at x2`);
+
+            // （可選）將相關信息添加到edge元素的數據屬性中
+            d3.select(edge).attr('beforeRectLine', closestRectLineToX1.id);
+            d3.select(edge).attr('afterRectLine', closestRectLineToX2.id);
+        });
+    }
 
 
 
@@ -3153,6 +3198,7 @@ end`
 
         //找到點擊的位置，判斷起始的rectLine
         //點擊的line有兩個rectLine
+        console.log(clickPolygon)
         const rectLine1id = (clickPolygon.getAttribute('beforeRectLine'));
         const rectLine2id = (clickPolygon.getAttribute('afterRectLine'));
         const rectLine1 = d3.select(`line#${rectLine1id}`).node();
@@ -3181,22 +3227,91 @@ end`
     }
     //拖拽結束
     polygonDrogend = (e) => {
-        (d3.select(this.containerRef.current)).select('svg').on("mousemove", null);
-        let rectline = this.state.svgContainer.selectAll(".rectLine");
-        rectline.attr("pointer-events", "auto");
-        rectline.classed("flash", false);
-        const x = this.line.attr('x1')
-        const y = this.line.attr('y1')
-        this.line.attr('x2', x).attr('y2', y)
-        this.line = null
-        //獲取兩個rectLine
-        const line = this.state.line;
-        const rectLine1 = line.getAttribute('be')
-        console.log(line)
-        //獲取rectLine的text，用於判斷是哪個箭頭
-        //獲取兩個rectLine的node
+        try {
+            (d3.select(this.containerRef.current)).select('svg').on("mousemove", null);
+            let rectline = this.state.svgContainer.selectAll(".rectLine");
+            rectline.attr("pointer-events", "auto");
+            rectline.classed("flash", false);
+            const x = this.line.attr('x1')
+            const y = this.line.attr('y1')
+            this.line.attr('x2', x).attr('y2', y)
+            this.line = null
+            //獲取兩個rectLine
+            const line = this.state.line;
+            const rectLine1id = (line.getAttribute('beforeRectLine'));
+            const rectLine2id = (line.getAttribute('afterRectLine'));
+            //獲取起始的rectLine
+            const startRectLine = this.state.polygonRectLine
+            //獲取鼠標放開時的rectLien
+            const endRectLine = e.target.getAttribute('Line')
+            //獲取text
+            const linetext = d3.select(`text#${(line.getAttribute('id'))}`).node().textContent
+            //獲取rectLine的text，用於判斷是哪個箭頭
+            if (startRectLine === endRectLine) {
 
-        console.log(e.target)
+            } else {
+                //判斷原本的rectLine中的node元素是什麽
+                //獲取原本的node的text
+                const node1 = d3.select(`rect[Line = "${rectLine1id}"]`).node().getAttribute('id');
+                const node2 = d3.select(`rect[Line = "${rectLine2id}"]`).node().getAttribute('id');
+                const text1 = d3.select(`text#${node1}`).node().textContent;
+                const text2 = d3.select(`text#${node2}`).node().textContent;
+                //獲取start rectLine的node元素
+                const startRectLineText = d3.select(`line#${startRectLine}`).node()
+                const startRectLineId = startRectLineText.getAttribute('id')
+                const startRectLineNode = d3.select(`rect[Line = "${startRectLineId}"]`).node()
+                const startRectLineNodeId = startRectLineNode.getAttribute('id')
+                const startRectLineNodeText = d3.select(`text#${startRectLineNodeId}`).node().textContent
+                //獲取end rectLine的node元素
+                const endRectLineElement = d3.select(`line#${endRectLine}`).node();
+                const endRectLineNode = d3.select(`rect[Line = "${endRectLine}"]`).node()
+                const endRectLineNodeId = endRectLineNode.getAttribute('id')
+                const endRectLineNodeText = d3.select(`text#${endRectLineNodeId}`).node().textContent;
+
+                //替換掉拖拽的文字
+                let editorText = this.props.EditorText.split('\n');
+                for (var i = 0; i < editorText.length; i++) {
+                    let str = editorText[i];
+                    if (str.includes(text1) && str.includes(text2) && str.includes(linetext)) {
+                        let arr = [startRectLineNodeText, text1, text2, endRectLineNodeText]
+                        const elementCounts = new Map();
+
+                        // 遍历数组，更新Map中的计数
+                        arr.forEach(item => {
+                            if (elementCounts.has(item)) {
+                                elementCounts.set(item, elementCounts.get(item) + 1);
+                            } else {
+                                elementCounts.set(item, 1);
+                            }
+                        });
+
+                        // 通过过滤Map找到只出现一次的元素
+                        const uniqueElements = Array.from(elementCounts).filter(item => item[1] === 1).map(item => item[0]);
+                        if (str.includes(uniqueElements[0])) {
+                            let newstr = str.replace(uniqueElements[0], uniqueElements[1])
+                            str = newstr
+                            editorText[i] = newstr
+                            this.props.witreToEdit(editorText.join('\n'))
+                            break;
+                            console.log(newstr)
+                        } else {
+                            str.replace(uniqueElements[1], uniqueElements[0])
+                            let newstr = str.replace(uniqueElements[0], uniqueElements[1])
+                            str = newstr
+                            editorText[i] = newstr
+                            this.props.witreToEdit(editorText.join('\n'))
+                            break;
+                        }
+
+
+                    }
+                }
+            }
+            console.log(startRectLine, endRectLine)
+            //獲取兩個rectLine的node
+        } catch (error) {
+            console.log(error)
+        }
 
     }
 
